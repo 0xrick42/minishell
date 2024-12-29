@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2024/12/27 17:41:51 by aistierl         ###   ########.fr       */
+/*   Updated: 2024/12/29 19:51:38 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -18,11 +18,16 @@
 # include <stdlib.h>
 # include <string.h>
 # include <unistd.h>
+# include <stdbool.h>
+# include "./libft/libft.h"
 
 typedef enum e_token_type
 {
 	WORD,
-	REDIR,
+	GREAT,
+	GREATGREAT,
+	LESS,
+	LESSLESS,
 	PIPE,
 }					t_token_type;
 
