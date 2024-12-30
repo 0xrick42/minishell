@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2024/12/29 19:51:38 by aistierl         ###   ########.fr       */
+/*   Updated: 2024/12/30 17:57:02 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -24,11 +24,11 @@
 typedef enum e_token_type
 {
 	WORD,
-	GREAT,
-	GREATGREAT,
-	LESS,
-	LESSLESS,
-	PIPE,
+	GREAT, // >
+	GREATGREAT, // >>
+	LESS, // <
+	LESSLESS, // <<
+	PIPE, // |
 }					t_token_type;
 
 typedef struct s_token
