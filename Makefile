@@ -1,7 +1,9 @@
 CC = cc
 CFLAGS = -Wall -Wextra -Werror -g3 
 INCLUDES = -Ilibft
-SRCS = parsing.c
+SRCS = parsing.c \
+token_utils.c \
+char_utils.c 
 NAME = minishell
 OBJS = $(SRCS:.c=.o)
 LIBFT_DIR = ./libft
