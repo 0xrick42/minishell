@@ -6,41 +6,11 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:52 by aistierl          #+#    #+#             */
-/*   Updated: 2024/12/30 19:33:47 by aistierl         ###   ########.fr       */
+/*   Updated: 2024/12/31 19:57:48 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-
-void	ft_append_token(t_minishell *minishell, t_token *new_token)
-{
-	t_token	*current_token;
-
-	if (minishell->token_list == NULL)
-		minishell->token_list = new_token;
-	else
-	{
-		current_token = minishell->token_list;
-		while (current_token->next_token != NULL)
-			current_token = current_token->next_token;
-		current_token->next_token = new_token;
-	}
-	return ;
-}
-
-bool	ft_space(char c)
-{
-	if (c == ' ' || c == '\t' || c == '\n')
-		return (true);
-	return (false);
-}
-
-bool	ft_notword(char c)
-{
-	if (c == '|' || c == '>' || c == '<')
-		return (true);
-	return (false);
-}
 
 void	ft_error(char *error_message)
 {
@@ -48,39 +18,12 @@ void	ft_error(char *error_message)
 	return ;
 }
 
-int	ft_wordlen(char *input)
-{
-	int	i;
-	int	count;
-
-	i = 0;
-	count = 0;
-	while (input[i] && !ft_space(input[i]) && !ft_notword(input[i]))
-	{
-		if (input[i] == '\"' || input[i] == '\'')
-		{
-			i++;
-			while (input[i] && input[i] != '\"' && input[i] != '\'')
-			{
-				i++;
-				count++;
-			}
-			if (!input[i])
-				return (-1);
-			break ;
-		}
-		i++;
-		count++;
-	}
-	return (count);
-}
-
-bool	ft_create_word_token(t_token *word_token, char *input)
+bool	ft_word_token(t_token *word_token, char *input)
 {
 	if (input[0] == '"' || input[0] == '\'')
 	{
 		if (ft_wordlen(input) == -1)
-		{	
+		{
 			ft_error("Unclosed quotes");
 			return (false);
 		}
@@ -91,7 +34,7 @@ bool	ft_create_word_token(t_token *word_token, char *input)
 	return (true);
 }
 
-bool	ft_create_all_token(t_minishell *minishell, char *input, t_token_type type)
+bool	ft_create_token(t_minishell *minishell, char *input, t_token_type type)
 {
 	t_token	*new_token;
 
@@ -104,7 +47,7 @@ bool	ft_create_all_token(t_minishell *minishell, char *input, t_token_type type)
 		new_token->token_name = ft_substr(input, 0, 2);
 	else if (type == WORD)
 	{
-		if (ft_create_word_token(new_token, input) == false)
+		if (ft_word_token(new_token, input) == false)
 			return (free(new_token), false);
 	}
 	if (!new_token->token_name)
@@ -115,20 +58,23 @@ bool	ft_create_all_token(t_minishell *minishell, char *input, t_token_type type)
 	return (true);
 }
 
-void	ft_free_token_list(t_minishell *minishell)
+bool	ft_token(t_minishell *minishell, char *input, int *i,
+		t_token_type token_type)
 {
-	t_token	*current_token;
-	t_token	*tmp;
-
-	current_token = minishell->token_list;
-	while (current_token)
+	if (!ft_create_token(minishell, input + *i, token_type))
+		return (ft_free_token_list(minishell), false);
+	if (token_type == PIPE || token_type == GREAT || token_type == LESS)
+		*i += 1;
+	else if (token_type == GREATGREAT || token_type == LESSLESS)
+		*i += 2;
+	else if (token_type == WORD)
 	{
-		tmp = current_token->next_token;
-		free(current_token->token_name);
-		free(current_token);
-		current_token = tmp;
+		if ((input[*i] == '"' || input[*i] == '\''))
+			*i += ft_wordlen(input + *i) + 2;
+		else
+			*i += ft_wordlen(input + *i);
 	}
-	return ;
+	return (true);
 }
 
 bool	ft_tokenization(t_minishell *minishell, char *input)
@@ -140,48 +86,48 @@ bool	ft_tokenization(t_minishell *minishell, char *input)
 	{
 		while (ft_space(input[i]))
 			i++;
-		if (ft_strncmp(input + i, "|", 1) == 0)
-		{
-			if (!ft_create_all_token(minishell, input + i, PIPE))
-				return (ft_free_token_list(minishell), false);
-			i++;
-		}
-		else if (ft_strncmp(input + i, ">", 1) == 0)
-		{
-			if (!ft_create_all_token(minishell, input + i, GREAT))
-				return (ft_free_token_list(minishell), false);
-			i++;
-		}
-		else if (ft_strncmp(input + i, "<", 1) == 0)
-		{
-			if (!ft_create_all_token(minishell, input + i, LESS))
-				return (ft_free_token_list(minishell), false);
-			i++;
-		}
-		else if (ft_strncmp(input + i, ">>", 2) == 0)
-		{
-			if (!ft_create_all_token(minishell, input + i, GREATGREAT))
-				return (ft_free_token_list(minishell), false);
-			i += 2;
-		}
-		else if (ft_strncmp(input + i, "<<", 2) == 0)
-		{
-			if (!ft_create_all_token(minishell, input + i, LESSLESS))
-				return (ft_free_token_list(minishell), false);
-			i += 2;
-		}
-		else if (!ft_space(input[i]) && !ft_notword(input[i]))
-		{
-			if (!ft_create_all_token(minishell, input + i, WORD))
-				return (ft_free_token_list(minishell), false);
-			if (input[i] == '"' || input[i] == '\'')
-				i += ft_wordlen(input + i) + 2;
-			else
-				i += ft_wordlen(input + i);
-		}
+		if ((!ft_strncmp(input + i, "|", 1) && !ft_token(minishell, input, &i,
+					PIPE)) || (!ft_strncmp(input + i, ">", 1)
+				&& !ft_token(minishell, input, &i, GREAT)) || (!ft_strncmp(input
+					+ i, "<", 1) && !ft_token(minishell, input, &i, LESS))
+			|| (!ft_strncmp(input + i, ">>", 2) && !ft_token(minishell, input,
+					&i, GREATGREAT)) || (!ft_strncmp(input + i, "<<", 2)
+				&& !ft_token(minishell, input, &i, LESSLESS))
+			|| (!ft_space(input[i]) && !ft_notword(input[i])
+				&& !ft_token(minishell, input, &i, WORD)))
+			return (false);
 	}
 	return (true);
 }
+
+// bool	ft_tokenization(t_minishell *minishell, char *input, int start)
+// {
+// 	while (input[start])
+// 	{
+// 		while (ft_space(input[start]))
+// 			i++;
+// 		if (!ft_strncmp(input + start, "|", 1) && !ft_token(minishell, input,
+				// &start, PIPE))
+// 			return (false);
+// 		else if (!ft_strncmp(input + start, ">", 1) && !ft_token(minishell,
+				// input,
+// 				&start, GREAT))
+// 			return (false);
+// 		else if (!ft_strncmp(input + start, "<", 1) && !ft_token(minishell,
+			// input, &start, LESS))
+// 			return (false);
+// 		else if (!ft_strncmp(input + start, ">>", 2) && !ft_token(minishell,
+				// input, &start, GREATGREAT))
+// 			return (false);
+// 		else if (!ft_strncmp(input + start, "<<", 2) && !ft_token(minishell,
+				// input, &start, LESSLESS))
+// 			return (false);
+// 		else if (!ft_space(input[start]) && !ft_notword(input[start])
+// 			&& !ft_token(minishell, input, &start, WORD))
+// 			return (false);
+// 	}
+// 	return (true);
+// }
 
 // void	ft_parsing(t_minishell *minishell, char *input)
 // turned int main for testing purposes
@@ -191,11 +137,10 @@ int	main(void)
 	char		*input;
 	t_token		*current_token;
 
-	input = "ls -l | grep -c 'hello' > file.txt";
+	input = "ls -l | grep -c 'hello' \"\" > file.txt";
 	minishell.token_list = NULL;
 	if (!ft_tokenization(&minishell, input))
 		return (1); // error
-	
 	// check if token chained list is correct
 	printf("Input: %s\n", input);
 	current_token = minishell.token_list;
@@ -209,13 +154,11 @@ int	main(void)
 	return (0);
 }
 
-
 // not interpreted:
 // check unclosed single/double quotes -> DONE
 // backslash \ or semicolon ;
 // parenthesis () {} [] and & (not in subject)
 // wildcards *, &&, || (bonus)
-
 
 // lexer -> tokenization
 // 1. only spaces
