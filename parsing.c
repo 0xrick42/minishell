@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:52 by aistierl          #+#    #+#             */
-/*   Updated: 2024/12/31 19:57:48 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/08 19:11:23 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -21,14 +21,7 @@ void	ft_error(char *error_message)
 bool	ft_word_token(t_token *word_token, char *input)
 {
 	if (input[0] == '"' || input[0] == '\'')
-	{
-		if (ft_wordlen(input) == -1)
-		{
-			ft_error("Unclosed quotes");
-			return (false);
-		}
 		word_token->token_name = ft_substr(input, 1, ft_wordlen(input));
-	}
 	else
 		word_token->token_name = ft_substr(input, 0, ft_wordlen(input));
 	return (true);
@@ -47,12 +40,13 @@ bool	ft_create_token(t_minishell *minishell, char *input, t_token_type type)
 		new_token->token_name = ft_substr(input, 0, 2);
 	else if (type == WORD)
 	{
-		if (ft_word_token(new_token, input) == false)
+		if (!ft_word_token(new_token, input))
 			return (free(new_token), false);
 	}
 	if (!new_token->token_name)
 		return (free(new_token), false);
 	new_token->token_type = type;
+	new_token->token_redir = ft_token_redir(type);
 	new_token->next_token = NULL;
 	ft_append_token(minishell, new_token);
 	return (true);
@@ -84,6 +78,8 @@ bool	ft_tokenization(t_minishell *minishell, char *input)
 	i = 0;
 	while (input[i])
 	{
+		if (!ft_unclosed_quotes(input))
+			return (ft_error("Unclosed quotes"), false);
 		while (ft_space(input[i]))
 			i++;
 		if ((!ft_strncmp(input + i, "|", 1) && !ft_token(minishell, input, &i,
@@ -100,34 +96,33 @@ bool	ft_tokenization(t_minishell *minishell, char *input)
 	return (true);
 }
 
-// bool	ft_tokenization(t_minishell *minishell, char *input, int start)
-// {
-// 	while (input[start])
-// 	{
-// 		while (ft_space(input[start]))
-// 			i++;
-// 		if (!ft_strncmp(input + start, "|", 1) && !ft_token(minishell, input,
-				// &start, PIPE))
-// 			return (false);
-// 		else if (!ft_strncmp(input + start, ">", 1) && !ft_token(minishell,
-				// input,
-// 				&start, GREAT))
-// 			return (false);
-// 		else if (!ft_strncmp(input + start, "<", 1) && !ft_token(minishell,
-			// input, &start, LESS))
-// 			return (false);
-// 		else if (!ft_strncmp(input + start, ">>", 2) && !ft_token(minishell,
-				// input, &start, GREATGREAT))
-// 			return (false);
-// 		else if (!ft_strncmp(input + start, "<<", 2) && !ft_token(minishell,
-				// input, &start, LESSLESS))
-// 			return (false);
-// 		else if (!ft_space(input[start]) && !ft_notword(input[start])
-// 			&& !ft_token(minishell, input, &start, WORD))
-// 			return (false);
-// 	}
-// 	return (true);
-// }
+bool	ft_token_order(t_minishell *minishell)
+{
+	t_token	*current_token;
+
+	current_token = minishell->token_list;
+	while (current_token)
+	{
+		if (current_token->token_id == 0)
+		{
+			if (current_token->token_redir == REDIR && (!current_token->next_token 
+					|| current_token->next_token->token_type == PIPE))
+			{
+				ft_error("Syntax error near unexpected token '|'");
+				return (false);
+			}
+			if (current_token->token_type == PIPE && (current_token->token_id == 0 || !current_token->next_token
+					|| current_token->next_token->token_type == PIPE))
+			{
+				ft_error("Syntax error near unexpected token '|'");
+				return (false);
+			}
+		}
+		current_token = current_token->next_token;
+	}
+	return (true);
+}
+
 
 // void	ft_parsing(t_minishell *minishell, char *input)
 // turned int main for testing purposes
@@ -137,20 +132,26 @@ int	main(void)
 	char		*input;
 	t_token		*current_token;
 
-	input = "ls -l | grep -c 'hello' \"\" > file.txt";
+	input = "grep -c 'hello world' | wc -l > file.txt";
 	minishell.token_list = NULL;
 	if (!ft_tokenization(&minishell, input))
 		return (1); // error
+
 	// check if token chained list is correct
 	printf("Input: %s\n", input);
 	current_token = minishell.token_list;
 	while (current_token)
 	{
-		printf("token_name: %s ", current_token->token_name);
-		printf("token_type: %d\n", current_token->token_type);
+		printf("token_id: %d ; ", current_token->token_id);
+		printf("token_name: %s ; ", current_token->token_name);
+		printf("token_type: %d ; ", current_token->token_type);
+		printf("token_redir: %d\n", current_token->token_redir);
 		current_token = current_token->next_token;
 	}
 	printf("Null node: %p\n", current_token);
+	
+	// if (!ft_token_order(&minishell))
+	// 	return (1); // error
 	return (0);
 }
 
