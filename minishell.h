@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/08 18:19:19 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/09 13:20:08 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -31,9 +31,9 @@ typedef enum e_token_type
 {
 	WORD,
 	GREAT, // output redirection
-	GREATGREAT, // append output redirection
+	GGREAT, // append output redirection
 	LESS, // input redirection
-	LESSLESS, // here doc
+	LLESS, // here doc
 	PIPE,
 }					t_token_type;
 
@@ -54,10 +54,27 @@ typedef struct s_minishell
 void				ft_append_token(t_minishell *minishell, t_token *new_token);
 void				ft_free_token_list(t_minishell *minishell);
 int					ft_token_redir(t_token_type type);
+bool				ft_pipe(t_minishell *minishell, int *i);
+bool				ft_great(t_minishell *minishell, int *i);
+bool				ft_ggreat(t_minishell *minishell, int *i);
+bool				ft_less(t_minishell *minishell, int *i);
+bool				ft_lless(t_minishell *minishell, int *i);
+bool				ft_word(t_minishell *minishell, char *input, int *i);
+bool				ft_tokenization(t_minishell *minishell, char *input, int i);
+bool				ft_create_output_token(t_minishell *minishell);
+bool				ft_create_word_token(t_minishell *minishell, char *input);
+bool				ft_create_hdoc_token(t_minishell *minishell);
+bool				ft_create_append_token(t_minishell *minishell);
+bool				ft_create_input_token(t_minishell *minishell);
+bool				ft_create_pipe_token(t_minishell *minishell);
+
+// bool				ft_token_order(t_minishell *minishell);
 
 int					ft_wordlen(char *input);
 bool				ft_space(char c);
 bool				ft_notword(char c);
 bool				ft_unclosed_quotes(char *input);
+
+void				ft_error(char *error_message);
 
 #endif

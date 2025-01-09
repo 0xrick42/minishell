@@ -6,21 +6,11 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/31 15:53:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/08 17:59:52 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/09 13:19:18 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
-
-int 	ft_token_redir(t_token_type type)
-{
-	if (type == GREAT || type == GREATGREAT || type == LESS || type == LESSLESS) 
-		return (REDIR);
-	else if (type == WORD || type == PIPE)
-		return (NONE);
-	else
-		return (-1);
-}
 
 void	ft_free_token_list(t_minishell *minishell)
 {

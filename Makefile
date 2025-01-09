@@ -3,6 +3,8 @@ CFLAGS = -Wall -Wextra -Werror -g3
 INCLUDES = -Ilibft
 SRCS = parsing.c \
 token_utils.c \
+tokens.c \
+create_tokens.c \
 char_utils.c 
 NAME = minishell
 OBJS = $(SRCS:.c=.o)
