@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:52 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/09 13:15:55 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/09 13:55:17 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -14,7 +14,7 @@
 
 void	ft_error(char *error_message)
 {
-	printf("Error: %s.\n", error_message);
+	printf("%s\n", error_message);
 	return ;
 }
 
@@ -77,11 +77,13 @@ int	main(void)
 	char		*input;
 	t_token		*current_token;
 
-	input = "grep -c 'hello world' | wc -l > file.txt";
+	input = "grep -c '$hello world' | wc -l > file.txt";
 
 	minishell.token_list = NULL;
+	if (!ft_not_handling(input))
+		return (1); // error
 	if (!ft_unclosed_quotes(input))
-		return (ft_error("Unclosed quotes"), false);
+		return (1); // error
 	if (!ft_tokenization(&minishell, input, 0))
 		return (1); // error
 

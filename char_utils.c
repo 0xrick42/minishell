@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/31 19:30:09 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/08 19:10:43 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/09 13:48:42 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -44,7 +44,32 @@ bool	ft_unclosed_quotes(char *input)
 		i++;
 	}
 	if (single_quote % 2 != 0 || double_quote % 2 != 0)
-		return (false);
+		return (ft_error("Unclosed quotes."), false);
+	return (true);
+}
+
+bool	ft_not_handling(char *input)
+{
+	int	i;
+
+	i = 0;
+	while (input[i])
+	{
+		if (input[i] == '"' || input[i] == '\'')
+		{
+			i++;
+			while (input[i] && input[i] != '"' && input[i] != '\'')
+				i++;
+		}
+		if (input[i] == '\\' || input[i] == ';' || input[i] == '('
+			|| input[i] == '{' || input[i] == '&' || input[i] == '*'
+			|| !ft_strncmp(input, "||", 2))
+		{
+			ft_error("Not handling the following characters:");
+			return (ft_error("\\, ;, (), {}, &, &&, ||, *"), false);
+		}
+		i++;
+	}
 	return (true);
 }
 
