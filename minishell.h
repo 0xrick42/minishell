@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/09 13:47:59 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/10 16:08:37 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -68,7 +68,9 @@ bool				ft_create_append_token(t_minishell *minishell);
 bool				ft_create_input_token(t_minishell *minishell);
 bool				ft_create_pipe_token(t_minishell *minishell);
 
-// bool				ft_token_order(t_minishell *minishell);
+bool				ft_token_order(t_minishell *minishell);
+bool				ft_check_pipe(t_minishell *minishell);
+bool				ft_check_redir(t_minishell *minishell);
 
 int					ft_wordlen(char *input);
 bool				ft_space(char c);
@@ -78,5 +80,6 @@ bool				ft_unclosed_quotes(char *input);
 
 
 void				ft_error(char *error_message);
+void				ft_token_error(char *error_message);
 
 #endif
