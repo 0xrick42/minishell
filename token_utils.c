@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/31 15:53:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/09 13:19:18 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/14 19:01:02 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -46,4 +46,14 @@ void	ft_append_token(t_minishell *minishell, t_token *new_token)
 		current_token->next_token = new_token;
 	}
 	return ;
+}
+
+int	ft_last_token_id(t_minishell *minishell)
+{
+	t_token	*current_token;
+
+	current_token = minishell->token_list;
+	while (current_token->next_token)
+		current_token = current_token->next_token;
+	return (current_token->token_id);
 }

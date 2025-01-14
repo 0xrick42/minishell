@@ -1,17 +1,19 @@
 CC = cc
 CFLAGS = -Wall -Wextra -Werror -g3 
-INCLUDES = -Ilibft
-SRCS = parsing.c \
+INCLUDES = -Ilibft 
+SRCS = main.c \
+parsing.c \
 token_utils.c \
 tokens.c \
 create_tokens.c \
 check_tokens.c \
-char_utils.c 
+char_utils.c \
+parse_char.c
 NAME = minishell
 OBJS = $(SRCS:.c=.o)
 LIBFT_DIR = ./libft
 LIBFT_LIB = $(LIBFT_DIR)/libft.a
-LIB_FLAGS = -Ilibft -L./libft -lft
+LIB_FLAGS = -Ilibft -L./libft -lft  -lreadline -lhistory
  
 all: $(LIBFT_LIB) $(NAME)
 

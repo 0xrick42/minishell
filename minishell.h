@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/10 16:08:37 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/14 18:54:18 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -20,6 +20,8 @@
 # include <stdlib.h>
 # include <string.h>
 # include <unistd.h>
+# include <readline/history.h>
+# include <readline/readline.h>
 
 typedef enum e_token_redir
 {
@@ -51,9 +53,13 @@ typedef struct s_minishell
 	t_token			*token_list;
 }					t_minishell;
 
+bool				ft_parsing(t_minishell *minishell, char *input);
+
 void				ft_append_token(t_minishell *minishell, t_token *new_token);
 void				ft_free_token_list(t_minishell *minishell);
 int					ft_token_redir(t_token_type type);
+int					ft_last_token_id(t_minishell *minishell);
+
 bool				ft_pipe(t_minishell *minishell, int *i);
 bool				ft_great(t_minishell *minishell, int *i);
 bool				ft_ggreat(t_minishell *minishell, int *i);
@@ -75,9 +81,10 @@ bool				ft_check_redir(t_minishell *minishell);
 int					ft_wordlen(char *input);
 bool				ft_space(char c);
 bool				ft_notword(char c);
+
 bool				ft_not_handling(char *input);
 bool				ft_unclosed_quotes(char *input);
-
+bool				ft_only_spaces(char *input);
 
 void				ft_error(char *error_message);
 void				ft_token_error(char *error_message);

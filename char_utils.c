@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/31 19:30:09 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/10 16:22:28 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/14 18:55:12 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -26,54 +26,6 @@ bool	ft_space(char c)
 	return (false);
 }
 
-bool	ft_unclosed_quotes(char *input)
-{
-	int	i;
-	int	single_quote;
-	int	double_quote;
-
-	i = 0;
-	single_quote = 0;
-	double_quote = 0;
-	while (input[i])
-	{
-		if (input[i] == '\"')
-			double_quote++;
-		else if (input[i] == '\'')
-			single_quote++;
-		i++;
-	}
-	if (single_quote % 2 != 0 || double_quote % 2 != 0)
-		return (ft_error("unclosed quotes."), false);
-	return (true);
-}
-
-bool	ft_not_handling(char *input)
-{
-	int	i;
-
-	i = 0;
-	while (input[i])
-	{
-		if (input[i] == '"' || input[i] == '\'')
-		{
-			i++;
-			while (input[i] && input[i] != '"' && input[i] != '\'')
-				i++;
-		}
-		if (input[i] == '\\' || input[i] == ';' || input[i] == '('
-			|| input[i] == '{' || input[i] == '&' || input[i] == '*'
-			|| !ft_strncmp(input + i, "||", 2))
-		{
-			printf("Not handling the following characters: ");
-			return (printf("\\, ;, (), {}, &, &&, ||, *\n"), false);
-		}
-		i++;
-	}
-	return (true);
-}
-
-
 int	ft_wordlen(char *input)
 {
 	int	i;
@@ -89,10 +41,10 @@ int	ft_wordlen(char *input)
 			if (i != 0)
 				flag = 1;
 			i++;
-			while (input[i] && input[i] != '\"' && input[i] != '\'')				
+			while (input[i] && input[i] != '\"' && input[i] != '\'')
 				i++;
 			if (ft_space(input[i + 1]) || !input[i + 1])
-			{	
+			{
 				if (flag == 1)
 					return (i + 1);
 				return (i - 1);
