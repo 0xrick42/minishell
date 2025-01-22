@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/31 15:53:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/14 19:01:02 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/22 12:45:38 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -25,6 +25,7 @@ void	ft_free_token_list(t_minishell *minishell)
 		free(current_token);
 		current_token = tmp;
 	}
+	minishell->token_list = NULL;
 	return ;
 }
 
