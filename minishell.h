@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/14 18:54:18 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/23 19:19:51 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,6 +39,13 @@ typedef enum e_token_type
 	PIPE,
 }					t_token_type;
 
+typedef struct s_cmd
+{
+	char			*cmd_name;
+	char			**cmd_args;
+	struct s_cmd	*next_cmd;
+}					t_cmd;
+
 typedef struct s_token
 {
 	int				token_id;
@@ -48,9 +55,18 @@ typedef struct s_token
 	struct s_token	*next_token;
 }					t_token;
 
+typedef struct s_envar
+{
+	char			*key;
+	char			*value;
+	struct s_envar	*next;
+}					t_envar;
+
 typedef struct s_minishell
 {
 	t_token			*token_list;
+	t_envar			*env_list;
+	t_cmd			*cmd_list;
 }					t_minishell;
 
 bool				ft_parsing(t_minishell *minishell, char *input);
@@ -88,5 +104,11 @@ bool				ft_only_spaces(char *input);
 
 void				ft_error(char *error_message);
 void				ft_token_error(char *error_message);
+
+bool				ft_envar_list(char **envp, t_minishell *minishell);
+bool				ft_add_envar(t_minishell *minishell, char *key,
+						char *value);
+char				*ft_get_key(char *envp, char c);
+char				*ft_get_value(char *envar, int start);
 
 #endif
