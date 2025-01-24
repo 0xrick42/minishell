@@ -10,7 +10,9 @@ check_tokens.c \
 char_utils.c \
 parse_char.c \
 envar.c \
-cmd_list.c
+cmd_list.c \
+ft_split_quotes.c 
+
 NAME = minishell
 OBJS = $(SRCS:.c=.o)
 LIBFT_DIR = ./libft

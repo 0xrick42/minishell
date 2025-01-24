@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/31 19:30:09 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/14 18:55:12 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/24 19:36:24 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -34,6 +34,7 @@ int	ft_wordlen(char *input)
 
 	i = 0;
 	count = 0;
+	flag = 0;
 	while (input[i] && !ft_space(input[i]) && !ft_notword(input[i]))
 	{
 		if (input[i] == '\"' || input[i] == '\'')

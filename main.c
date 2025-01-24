@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 19:09:26 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/23 19:19:46 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/24 19:35:02 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -47,6 +47,27 @@ void	ft_test_env(t_minishell *minishell, char **envp)
 	}
 }
 
+void	ft_test_cmd(t_minishell *minishell)
+{
+	t_cmd			*current_cmd;
+	int				i;
+	
+	current_cmd = minishell->cmd_list;
+	i = 0;
+	while (current_cmd)
+	{
+		printf("cmd_name: %s\n", current_cmd->cmd_name);
+		printf("cmd_args: ");
+		while (current_cmd->cmd_args[i])
+		{
+			printf("[%s] ", current_cmd->cmd_args[i]);
+			i++;
+		}
+		printf("\n");
+		current_cmd = current_cmd->next_cmd;
+	}
+}
+
 int	main(int ac, char **av, char **envp)
 {
 	t_minishell		*minishell;
@@ -62,6 +83,9 @@ int	main(int ac, char **av, char **envp)
 	minishell = malloc(sizeof(t_minishell));
 	if (!minishell)
 		return (1);
+	minishell->token_list = NULL;
+	minishell->env_list = NULL;
+	minishell->cmd_list = NULL;
 	if (!ft_envar_list(envp, minishell))
 		return (1);
 	while (1)
@@ -78,14 +102,17 @@ int	main(int ac, char **av, char **envp)
 			continue ;
 		}
 		// following part is for testing purposes
-		ft_test_token(minishell, input);	
-		ft_test_env(minishell, envp);
+		// ft_test_token(minishell, input);	
+		// ft_test_env(minishell, envp);
 		// end of testing part
 		ft_free_token_list(minishell);
 		free(input);
 		input = NULL;
-		if (!ft_cmd_struct(minishell))
+		if (!ft_cmd_struct(input, minishell))
 			return (1);
+		// following part is for testing purposes
+		ft_test_cmd(minishell);
+		// end of testing part
 	}
 	rl_clear_history();
 	return (0);

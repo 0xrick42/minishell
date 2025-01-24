@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/23 19:19:51 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/24 19:30:50 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -110,5 +110,13 @@ bool				ft_add_envar(t_minishell *minishell, char *key,
 						char *value);
 char				*ft_get_key(char *envp, char c);
 char				*ft_get_value(char *envar, int start);
+
+bool				ft_cmd_struct(char *input, t_minishell *minishell);
+bool				ft_cmd_list(char *cmd_cell, t_minishell *minishell);
+char				**ft_split_cmd_args(char *cmd_cell);
+void				ft_free_cmd_list(t_cmd *cmd_list);
+void				ft_free_table(char **table);
+
+char				**ft_split_quotes(char const *s, char c);
 
 #endif
