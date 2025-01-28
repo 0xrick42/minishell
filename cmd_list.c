@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cmd_list.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 17:48:20 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/24 19:40:36 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/27 17:39:51 by aisha            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -104,6 +104,12 @@ bool	ft_cmd_struct(char *input, t_minishell *minishell)
 	cmd_table = ft_split_quotes(input, '|'); // beware if pipe inbetween quotes ( "|" )
 	if (!cmd_table)
 		return (false);
+	i = 0;
+	while (cmd_table[i])
+	{
+		printf("%s \n", cmd_table[i]);
+		i++;
+	}
 	i = 0;
 	while (cmd_table[i])
 	{

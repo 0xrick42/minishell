@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   char_utils.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/31 19:30:09 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/24 19:36:24 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/27 17:09:16 by aisha            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -29,11 +29,9 @@ bool	ft_space(char c)
 int	ft_wordlen(char *input)
 {
 	int	i;
-	int	count;
 	int	flag;
 
 	i = 0;
-	count = 0;
 	flag = 0;
 	while (input[i] && !ft_space(input[i]) && !ft_notword(input[i]))
 	{

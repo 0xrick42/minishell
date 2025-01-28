@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_split_quotes.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/24 18:58:36 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/24 19:39:12 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/27 17:58:16 by aisha            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -78,7 +78,7 @@ static char	**ft_fill_tab_quotes(const char *s, char c, char **tab)
 	start = 0;
 	while (s[i] != '\0')
 	{
-		if (s[i] == c)
+		if (s[i] == "|")
 			start = i + 1;
         if (s[i] == '"' || s[i] == '\'')
         {
@@ -104,11 +104,13 @@ char	**ft_split_quotes(char const *s, char c)
 {
 	char	**split;
 
-    if (!s)
-        return (NULL);
-	
+	if (!s)
+		return (NULL);
+
     split = malloc(sizeof(char *) * (ft_word_count_quotes(s, c) + 1));
 	if (split == NULL)
-		return (NULL);
-	return (ft_fill_tab_quotes(s, c, split));
+		return (NULL);	
+	split = ft_fill_tab_quotes(s, c, split);
+	printf("%s pbm\n", split[0]);
+	return (split);
 }

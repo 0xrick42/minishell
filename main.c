@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 19:09:26 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/24 19:35:02 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/01/27 17:35:51 by aisha            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,13 +106,16 @@ int	main(int ac, char **av, char **envp)
 		// ft_test_env(minishell, envp);
 		// end of testing part
 		ft_free_token_list(minishell);
+		if (!ft_cmd_struct(input, minishell))
+		{
+			printf("it did not work lol");
+			return (1);
+		}
+		// following part is for testing purposes
+		// ft_test_cmd(minishell);
+		// end of testing part		
 		free(input);
 		input = NULL;
-		if (!ft_cmd_struct(input, minishell))
-			return (1);
-		// following part is for testing purposes
-		ft_test_cmd(minishell);
-		// end of testing part
 	}
 	rl_clear_history();
 	return (0);
