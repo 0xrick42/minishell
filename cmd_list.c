@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   cmd_list.c                                         :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 17:48:20 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/09 15:44:01 by aisha            ###   ########.fr       */
+/*   Updated: 2025/02/13 16:48:45 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -106,18 +106,18 @@ bool	ft_cmd_struct(char *input, t_minishell *minishell)
 	if (!cmd_table)
 		return (false);
 	i = 0;
-	while (cmd_table[i])
-	{
-		printf("test %s\n", cmd_table[i]);
-		i++;
-	}
-	// i = 0;
 	// while (cmd_table[i])
 	// {
-	// 	if (!ft_cmd_list(cmd_table[i], minishell))
-	// 		return (ft_free_table(cmd_table), false);
+	// 	printf("test %s\n", cmd_table[i]);
 	// 	i++;
 	// }
-	// ft_free_table(cmd_table);
+	i = 0;
+	while (cmd_table[i])
+	{
+		if (!ft_cmd_list(cmd_table[i], minishell))
+			return (ft_free_table(cmd_table), false);
+		i++;
+	}
+	ft_free_table(cmd_table);
     return (true);
 }

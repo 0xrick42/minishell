@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:52 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/14 19:18:19 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/13 16:55:00 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,6 +65,6 @@ bool	ft_parsing(t_minishell *minishell, char *input)
 
 // not interpreted:
 // unclosed single/double quotes
-// backslash \ or semicolon ;
+// backslash \ or semicolon ; >>> a voir pour \ avant caractere special
 // parenthesis () {} [] and & (not in subject)
 // wildcards *, &&, || (bonus)

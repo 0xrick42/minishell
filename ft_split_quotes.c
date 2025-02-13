@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   ft_split_quotes.c                                  :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
+/*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/24 18:58:36 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/09 15:45:12 by aisha            ###   ########.fr       */
+/*   Updated: 2025/02/13 16:43:16 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -87,18 +87,18 @@ char	**ft_fill_tab_quotes(const char *s, char c, char **tab)
 			while (s[i] != quote_char)
 				i++;
 		}
-		else if (s[i + 1] == c)
+		if (s[i + 1] == c)
 		{
 			tab[j] = ft_duparray_quotes(s, start, i);
 			if (tab[j] == NULL)
 				return (ft_get_free(tab, j));
 			j++;
-			i += 2;
-			while (s[i] == ' ' || s[i] == '\t')
+			i += 1;
+			while (s[i + 1] == ' ' || s[i + 1] == '\t')
 				i++;
-			start = i;
-		}		
-		else if (s[i + 1] == '\0')
+			start = i + 1;
+		}
+		if (s[i + 1] == '\0')
 		{
 			tab[j] = ft_duparray_quotes(s, start, i + 1);
 			if (tab[j] == NULL)
