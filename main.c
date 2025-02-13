@@ -6,7 +6,7 @@
 /*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 19:09:26 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/27 17:35:51 by aisha            ###   ########.fr       */
+/*   Updated: 2025/02/05 21:36:27 by aisha            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -107,10 +107,7 @@ int	main(int ac, char **av, char **envp)
 		// end of testing part
 		ft_free_token_list(minishell);
 		if (!ft_cmd_struct(input, minishell))
-		{
-			printf("it did not work lol");
 			return (1);
-		}
 		// following part is for testing purposes
 		// ft_test_cmd(minishell);
 		// end of testing part		

@@ -6,7 +6,7 @@
 /*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 17:48:20 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/27 17:39:51 by aisha            ###   ########.fr       */
+/*   Updated: 2025/02/09 15:44:01 by aisha            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -100,23 +100,24 @@ bool	ft_cmd_struct(char *input, t_minishell *minishell)
 {
 	char	**cmd_table;
 	int		i;
+	(void)minishell;
 
-	cmd_table = ft_split_quotes(input, '|'); // beware if pipe inbetween quotes ( "|" )
+	cmd_table = ft_split_quotes(input, '|');
 	if (!cmd_table)
 		return (false);
 	i = 0;
 	while (cmd_table[i])
 	{
-		printf("%s \n", cmd_table[i]);
+		printf("test %s\n", cmd_table[i]);
 		i++;
 	}
-	i = 0;
-	while (cmd_table[i])
-	{
-		if (!ft_cmd_list(cmd_table[i], minishell))
-			return (ft_free_table(cmd_table), false);
-		i++;
-	}
-	ft_free_table(cmd_table);
+	// i = 0;
+	// while (cmd_table[i])
+	// {
+	// 	if (!ft_cmd_list(cmd_table[i], minishell))
+	// 		return (ft_free_table(cmd_table), false);
+	// 	i++;
+	// }
+	// ft_free_table(cmd_table);
     return (true);
 }

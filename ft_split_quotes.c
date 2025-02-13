@@ -6,7 +6,7 @@
 /*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/24 18:58:36 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/27 17:58:16 by aisha            ###   ########.fr       */
+/*   Updated: 2025/02/09 15:45:12 by aisha            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -67,29 +67,40 @@ static char	**ft_get_free(char **tab, unsigned int index)
 	return (NULL);
 }
 
-static char	**ft_fill_tab_quotes(const char *s, char c, char **tab)
+char	**ft_fill_tab_quotes(const char *s, char c, char **tab)
 {
 	unsigned int	i;
 	unsigned int	j;
 	unsigned int	start;
-
+	char			quote_char;
+	
 	i = 0;
 	j = 0;
 	start = 0;
+	quote_char = '\0';
 	while (s[i] != '\0')
 	{
-		if (s[i] == "|")
-			start = i + 1;
-        if (s[i] == '"' || s[i] == '\'')
-        {
-            start = i;
-            i++;
-            while (s[i] && s[i] != '"' && s[i] != '\'')
-                i++;
-        }
-		if (s[i] != c && (s[i + 1] == c || s[i + 1] == '\0'))
+		if (s[i] == '"' || s[i] == '\'')
 		{
-			tab[j] = ft_duparray_quotes(s, start, (i + 1));
+			quote_char = s[i];
+			i++;
+			while (s[i] != quote_char)
+				i++;
+		}
+		else if (s[i + 1] == c)
+		{
+			tab[j] = ft_duparray_quotes(s, start, i);
+			if (tab[j] == NULL)
+				return (ft_get_free(tab, j));
+			j++;
+			i += 2;
+			while (s[i] == ' ' || s[i] == '\t')
+				i++;
+			start = i;
+		}		
+		else if (s[i + 1] == '\0')
+		{
+			tab[j] = ft_duparray_quotes(s, start, i + 1);
 			if (tab[j] == NULL)
 				return (ft_get_free(tab, j));
 			j++;
@@ -106,11 +117,9 @@ char	**ft_split_quotes(char const *s, char c)
 
 	if (!s)
 		return (NULL);
-
-    split = malloc(sizeof(char *) * (ft_word_count_quotes(s, c) + 1));
+	split = malloc(sizeof(char *) * (ft_word_count_quotes(s, c) + 1));
 	if (split == NULL)
-		return (NULL);	
+		return (NULL);
 	split = ft_fill_tab_quotes(s, c, split);
-	printf("%s pbm\n", split[0]);
 	return (split);
 }

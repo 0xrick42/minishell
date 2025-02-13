@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
+/*   By: aisha <aisha@student.42.fr>                +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/24 19:30:50 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/09 15:45:27 by aisha            ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -118,5 +118,6 @@ void				ft_free_cmd_list(t_cmd *cmd_list);
 void				ft_free_table(char **table);
 
 char				**ft_split_quotes(char const *s, char c);
+char				**ft_fill_tab_quotes(const char *s, char c, char **tab);
 
 #endif
