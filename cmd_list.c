@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 17:48:20 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/13 16:48:45 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/14 15:06:17 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -49,8 +49,8 @@ char	**ft_split_cmd_args(char *cmd_cell)
 {
 	char	**cmd_args;
 	int		i;
-	bool		quote_flag;
-	
+	bool	quote_flag;
+
 	i = 0;
 	quote_flag = false;
 	while (cmd_cell && cmd_cell[i])
@@ -65,7 +65,7 @@ char	**ft_split_cmd_args(char *cmd_cell)
 	if (quote_flag == false)
 		cmd_args = ft_split(cmd_cell, ' ');
 	else
-		cmd_args = ft_split_quotes(cmd_cell, ' ');		
+		cmd_args = ft_split_quotes(cmd_cell, ' ');
 	return (cmd_args);
 }
 
@@ -91,26 +91,19 @@ bool	ft_cmd_list(char *cmd_cell, t_minishell *minishell)
 		current_cmd = minishell->cmd_list;
 		while (current_cmd->next_cmd)
 			current_cmd = current_cmd->next_cmd;
-		current_cmd->next_cmd = new_cmd;	
+		current_cmd->next_cmd = new_cmd;
 	}
-    return (true);
+	return (true);
 }
 
 bool	ft_cmd_struct(char *input, t_minishell *minishell)
 {
 	char	**cmd_table;
 	int		i;
-	(void)minishell;
 
 	cmd_table = ft_split_quotes(input, '|');
 	if (!cmd_table)
 		return (false);
-	i = 0;
-	// while (cmd_table[i])
-	// {
-	// 	printf("test %s\n", cmd_table[i]);
-	// 	i++;
-	// }
 	i = 0;
 	while (cmd_table[i])
 	{
@@ -119,5 +112,5 @@ bool	ft_cmd_struct(char *input, t_minishell *minishell)
 		i++;
 	}
 	ft_free_table(cmd_table);
-    return (true);
+	return (true);
 }

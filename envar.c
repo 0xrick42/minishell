@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 16:33:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/01/24 19:35:14 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/14 15:03:15 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -65,7 +65,7 @@ bool	ft_envar_list(char **envp, t_minishell *minishell)
 	char	*key;
 	char	*value;
 
-	if (!envp) 
+	if (!envp)
 		return (false);
 	i = 0;
 	while (envp[i])

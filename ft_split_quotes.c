@@ -6,13 +6,13 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/24 18:58:36 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/13 16:43:16 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/14 16:43:25 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
 
-static int	ft_word_count_quotes(const char *s, char c)
+int	ft_word_count_quotes(const char *s, char c)
 {
 	int				count;
 	unsigned int	i;
@@ -25,12 +25,12 @@ static int	ft_word_count_quotes(const char *s, char c)
 		return (1);
 	while (s[i] != '\0')
 	{
-        if (s[i] == '"' || s[i] == '\'')
-        {
-            i++;
-            while (s[i] && s[i] != '"' && s[i] != '\'')
-                i++;
-        }
+		if (s[i] == '"' || s[i] == '\'')
+		{
+			i++;
+			while (s[i] && s[i] != '"' && s[i] != '\'')
+				i++;
+		}
 		if (s[i] != c && (s[i + 1] == c || s[i + 1] == '\0'))
 			count++;
 		i++;
@@ -38,7 +38,7 @@ static int	ft_word_count_quotes(const char *s, char c)
 	return (count);
 }
 
-static char	*ft_duparray_quotes(const char *s, unsigned int start, unsigned int end)
+char	*ft_duparray_quotes(const char *s, unsigned int start, unsigned int end)
 {
 	char			*mem_word;
 	unsigned int	i;
@@ -57,7 +57,7 @@ static char	*ft_duparray_quotes(const char *s, unsigned int start, unsigned int 
 	return (mem_word);
 }
 
-static char	**ft_get_free(char **tab, unsigned int index)
+char	**ft_get_free(char **tab, unsigned int index)
 {
 	while (index > 0)
 	{
@@ -67,13 +67,32 @@ static char	**ft_get_free(char **tab, unsigned int index)
 	return (NULL);
 }
 
+void	ft_skip_quotes(char *s, int *i)
+{
+	char	quote_char;
+	
+	quote_char = '\0';
+	quote_char = s[*i];
+		*i++;
+	while (s[*i] != quote_char)
+		*i++;
+}
+
+bool	ft_add_segment(char *s, int start, int *i, int *j, char **tab)
+{
+	tab[*j] = ft_duparray_quotes(s, start, *i);
+	if (tab[*j] == NULL)
+		return (false);
+	return (true);
+}
+
 char	**ft_fill_tab_quotes(const char *s, char c, char **tab)
 {
 	unsigned int	i;
 	unsigned int	j;
 	unsigned int	start;
 	char			quote_char;
-	
+
 	i = 0;
 	j = 0;
 	start = 0;
@@ -81,14 +100,16 @@ char	**ft_fill_tab_quotes(const char *s, char c, char **tab)
 	while (s[i] != '\0')
 	{
 		if (s[i] == '"' || s[i] == '\'')
-		{
-			quote_char = s[i];
-			i++;
-			while (s[i] != quote_char)
-				i++;
-		}
-		if (s[i + 1] == c)
-		{
+			ft_skip_quotes(s, &i);
+		if (s[i + 1] == c || s[i + 1] == '\0')
+		{			
+			if (s[i + 1] == '\0')
+			{	
+				tab[j] = ft_duparray_quotes(s, start, i + 1);
+				if (tab[j] == NULL)
+					return (ft_get_free(tab, j));
+				return (tab);
+			}
 			tab[j] = ft_duparray_quotes(s, start, i);
 			if (tab[j] == NULL)
 				return (ft_get_free(tab, j));
@@ -97,13 +118,6 @@ char	**ft_fill_tab_quotes(const char *s, char c, char **tab)
 			while (s[i + 1] == ' ' || s[i + 1] == '\t')
 				i++;
 			start = i + 1;
-		}
-		if (s[i + 1] == '\0')
-		{
-			tab[j] = ft_duparray_quotes(s, start, i + 1);
-			if (tab[j] == NULL)
-				return (ft_get_free(tab, j));
-			j++;
 		}
 		i++;
 	}
