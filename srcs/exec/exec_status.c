@@ -1,36 +1,28 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   define.h                                           :+:      :+:    :+:   */
+/*   exec_status.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ykhomsi <ykhomsi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/25 11:20:33 by ykhomsi          #+#    #+#             */
-/*   Updated: 2025/01/25 15:42:18 by ykhomsi         ###   ########.fr       */
+/*   Created: 2025/02/15 14:23:45 by ykhomsi          #+#    #+#             */
+/*   Updated: 2025/02/15 16:48:12 by ykhomsi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef DEFINE_H
-# define DEFINE_H
+#include "minishell.h"
 
-# define SUCCESS 0
-# define ERROR 1
-
-/* Token types */
-typedef enum e_token_type
+void	ft_update_exit_status(t_minishell *minishell, int status)
 {
-	WORD,
-	GREAT,
-	GGREAT,
-	LESS,
-	LLESS,
-	PIPE,
-}	t_token_type;
+	if (WIFEXITED(status))
+		minishell->exit_status = WEXITSTATUS(status);
+	else if (WIFSIGNALED(status))
+		minishell->exit_status = 128 + WTERMSIG(status);
+	else
+		minishell->exit_status = status;
+}
 
-typedef enum e_token_redir
+int	ft_get_last_status(t_minishell *minishell)
 {
-	NONE,
-	REDIR,
-}	t_token_redir;
-
-#endif 
+	return (minishell->exit_status);
+}

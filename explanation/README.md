@@ -1,132 +1,145 @@
-# Minishell Project Explanation
+# Minishell Project Documentation
 
 ## Project Overview
-This project is a simplified shell implementation that handles command execution, pipes, redirections, environment variables, and built-in commands.
+This project implements a shell that handles command execution, pipes, redirections, environment variables, and built-in commands. It follows a modular design with clear separation of concerns.
 
-## Code Structure and Flow
+## Code Structure
 
-### 1. Input Processing and Readline
-- **Main Loop (`main.c`)**
-  - Uses readline to get user input
-  - Handles basic input validation
-  - Manages command history
+### 1. Input Processing (`main.c`)
+- Uses readline for input handling
+- Command history management
+- Basic input validation
+- Signal handling setup
 
-### 2. Lexical Analysis (Tokenization)
-- **Quote Handling (`ft_split_quotes.c` and utils)**
-  - `ft_split_quotes`: Splits input while respecting quotes
-  - `ft_get_quoted_word`: Extracts quoted content
-  - `ft_get_normal_word`: Handles non-quoted content
+### 2. Lexical Analysis (`srcs/token/`)
+- **Token Creation**
+  - Handles different token types (WORD, PIPE, GREAT, GGREAT, LESS, LLESS)
+  - Quote-aware tokenization
+  - Proper memory management
+  - Error handling
 
-- **Token Creation (`create_tokens.c` and utils)**
-  - `ft_tokenization`: Main tokenization function
-  - Creates different token types:
-    - WORD (command names and arguments)
-    - GREAT (>), GGREAT (>>)
-    - LESS (<), LLESS (<<)
-    - PIPE (|)
+- **Token Types**
+  ```c
+  typedef enum e_token_type {
+      WORD,      // Commands, arguments, filenames
+      GREAT,     // > redirection
+      GGREAT,    // >> redirection
+      LESS,      // < redirection
+      LLESS,     // << heredoc
+      PIPE       // | pipeline
+  } t_token_type;
+  ```
 
-### 3. Parsing and Command Structure
-- **Command List Creation (`cmd_list.c` and utils)**
-  - `ft_cmd_struct`: Creates command structure from input
-  - `ft_cmd_list`: Builds list of commands
-  - `ft_create_cmd`: Creates individual command nodes
+### 3. Parsing (`srcs/parse/`)
+- Command structure creation
+- Syntax validation
+- Error detection
+- Pipeline setup
 
-### 4. Environment Variable Handling
-- **Environment Management (`envar.c`)**
-  - `ft_envar_list`: Creates environment variable list
-  - `ft_add_envar`: Adds new environment variables
-  - `ft_get_env_value`: Retrieves environment variable values
+### 4. Expansion (`srcs/expand/`)
+- Environment variable expansion
+- Quote handling
+- Special parameter handling ($?, $$)
+- Word splitting
 
-### 5. Expansion
-- **Variable Expansion (`expand.c` and utils)**
-  - `ft_expand`: Main expansion function
-  - `ft_expand_dollars`: Handles $ expansions
-  - `ft_expand_var`: Expands individual variables
+### 5. Execution (`srcs/exec/`)
+- Command execution
+- Pipeline management
+- Redirection handling
+- Heredoc processing
+- Process management
 
-### 6. Built-in Commands
-Implementation of shell built-in commands:
-- `echo`: Display messages
-- `cd`: Change directory
-- `pwd`: Print working directory
-- `export`: Set environment variables
-- `unset`: Remove environment variables
-- `env`: Display environment
-- `exit`: Exit the shell
+### 6. Built-in Commands (`srcs/builtins/`)
+- cd: Directory navigation
+- echo: Text output
+- pwd: Current directory
+- export: Environment variable management
+- unset: Variable removal
+- env: Environment display
+- exit: Shell termination
 
-## Data Structures
+## Key Data Structures
 
-### 1. Command Structure (`t_cmd`)
+### Command Structure
 ```c
-typedef struct s_cmd
-{
-    char            *cmd_name;     // Command name
-    char            **cmd_args;    // Command arguments
-    struct s_cmd    *next_cmd;     // Next command in pipeline
+typedef struct s_cmd {
+    char            *cmd_name;
+    char            **cmd_args;
+    struct s_cmd    *next_cmd;
 } t_cmd;
 ```
 
-### 2. Token Structure (`t_token`)
+### Token Structure
 ```c
-typedef struct s_token
-{
-    int             token_id;      // Token identifier
-    char            *token_name;   // Token content
-    t_token_type    token_type;    // Token type (WORD, PIPE, etc.)
-    t_token_redir   token_redir;   // Redirection type
-    struct s_token  *next_token;   // Next token in list
+typedef struct s_token {
+    int             token_id;
+    char            *token_name;
+    t_token_type    token_type;
+    t_token_redir   token_redir;
+    struct s_token  *next_token;
 } t_token;
 ```
 
-### 3. Environment Variable Structure (`t_envar`)
+### Environment Variable Structure
 ```c
-typedef struct s_envar
-{
-    char            *key;          // Variable name
-    char            *value;        // Variable value
-    struct s_envar  *next;        // Next environment variable
+typedef struct s_envar {
+    char            *key;
+    char            *value;
+    struct s_envar  *next;
 } t_envar;
 ```
 
-## Function Call Flow
+## Processing Flow
 
 1. **Input Processing**
    ```
-   main() → readline() → input validation
+   readline() → input validation → history management
    ```
 
 2. **Tokenization**
    ```
-   ft_parsing() → ft_tokenization() → token creation functions
+   input → lexical analysis → token list creation
    ```
 
-3. **Command Structure Creation**
+3. **Parsing**
    ```
-   ft_cmd_struct() → ft_cmd_list() → ft_create_cmd()
+   token list → syntax validation → command structure creation
    ```
 
 4. **Expansion**
    ```
-   ft_expand() → ft_expand_dollars() → ft_expand_var()
+   command args → variable expansion → quote removal
    ```
 
 5. **Execution**
    ```
-   execute_commands() → handle_redirections() → execute_single_command()
+   command structure → redirection setup → process management
    ```
 
-## Memory Management
-- Each structure has its corresponding free function
-- Memory is freed in reverse order of allocation
-- Error handling includes proper cleanup
-
 ## Error Handling
-- Return values indicate success/failure
-- Error messages are descriptive
-- Memory is properly freed on errors
+- Comprehensive error checking
+- Memory leak prevention
+- Proper cleanup on failures
+- Descriptive error messages
 
-## Future Improvements
-1. Signal handling implementation
-2. More robust error handling
-3. Additional built-in commands
-4. Enhanced command history
-5. Job control features 
+## Memory Management
+- Systematic allocation tracking
+- Proper deallocation
+- Resource cleanup
+- Error recovery
+
+## Features
+- Command execution
+- Pipeline support
+- Redirection handling
+- Environment management
+- Signal handling
+- History management
+
+For detailed documentation on each component, see:
+- [01-Overview.md](01-Overview.md)
+- [02-Tokenization.md](02-Tokenization.md)
+- [03-Parsing.md](03-Parsing.md)
+- [04-Execution.md](04-Execution.md)
+- [05-Builtins.md](05-Builtins.md)
+- [06-Expansion.md](06-Expansion.md) 

@@ -1,36 +1,23 @@
 /* ************************************************************************** */
 /*                                                                            */
 /*                                                        :::      ::::::::   */
-/*   define.h                                           :+:      :+:    :+:   */
+/*   exit_status.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
 /*   By: ykhomsi <ykhomsi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2025/01/25 11:20:33 by ykhomsi          #+#    #+#             */
-/*   Updated: 2025/01/25 15:42:18 by ykhomsi         ###   ########.fr       */
+/*   Created: 2025/02/14 20:10:33 by ykhomsi          #+#    #+#             */
+/*   Updated: 2025/02/14 21:45:18 by ykhomsi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
-#ifndef DEFINE_H
-# define DEFINE_H
+#include "minishell.h"
 
-# define SUCCESS 0
-# define ERROR 1
-
-/* Token types */
-typedef enum e_token_type
+void	ft_set_exit_status(t_minishell *minishell, int status)
 {
-	WORD,
-	GREAT,
-	GGREAT,
-	LESS,
-	LLESS,
-	PIPE,
-}	t_token_type;
+	minishell->exit_status = status;
+}
 
-typedef enum e_token_redir
+int	ft_get_exit_status(t_minishell *minishell)
 {
-	NONE,
-	REDIR,
-}	t_token_redir;
-
-#endif 
+	return (minishell->exit_status);
+}

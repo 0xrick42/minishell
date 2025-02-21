@@ -24,6 +24,7 @@ SRCS_NAMES	=	main.c \
 				token/token_ops3.c \
 				exec/cmd_list.c \
 				exec/cmd_list_utils.c \
+				exec/exec_status.c \
 				expand/envar.c \
 				expand/expand.c \
 				expand/expand_process.c \
@@ -36,7 +37,8 @@ SRCS_NAMES	=	main.c \
 				builtins/export.c \
 				builtins/unset.c \
 				builtins/exit.c \
-				utils/error.c
+				utils/error.c \
+				utils/exit_status.c
 
 OBJS_NAMES	=	$(SRCS_NAMES:.c=.o)
 SRCS		=	$(addprefix $(SRCS_DIR)/,$(SRCS_NAMES))

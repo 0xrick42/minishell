@@ -1,112 +1,191 @@
 # Tokenization Process
 
 ## Overview
-
-The tokenization process is the first step in command processing, handled by the code in `srcs/token/`. This component is responsible for breaking down the user's input into meaningful tokens that can be processed by the parser.
+The tokenization component (`srcs/token/`) implements lexical analysis, converting raw input into a stream of meaningful tokens. This is the first step in command processing and sets the foundation for parsing and execution.
 
 ## Token Types
 
-The shell recognizes several types of tokens:
-- Commands
-- Arguments
-- Operators (|, >, >>, <)
-- Environment Variables
-- Quotes (single and double)
-- Special characters
-
-## Implementation Details
+### Core Token Types
+```c
+typedef enum e_token_type {
+    WORD,       // Commands, arguments, filenames
+    GREAT,      // > output redirection
+    GGREAT,     // >> append redirection
+    LESS,       // < input redirection
+    LLESS,      // << heredoc
+    PIPE,       // | pipeline
+} t_token_type;
+```
 
 ### Token Structure
 ```c
 typedef struct s_token {
-    int         token_id;       // Unique identifier for the token
-    char        *token_name;    // The actual content of the token
-    int         token_type;     // Type of token (command, argument, operator)
-    int         token_redir;    // Redirection type if applicable
-    struct s_token *next_token; // Pointer to the next token in the list
+    int             token_id;       // Unique identifier
+    char            *token_name;    // Token content
+    t_token_type    token_type;     // Token classification
+    t_token_redir   token_redir;    // Redirection flag
+    struct s_token  *next_token;    // Next token in list
 } t_token;
 ```
 
-### Tokenization Process
+## Implementation Details
 
-1. **Input Reading**
-   - The shell reads input using readline
-   - Input is stored and added to history
+### 1. Token Creation
+- **Word Tokens**
+  ```c
+  bool ft_create_word_token(t_minishell *minishell, char *input);
+  ```
+  - Handles command names and arguments
+  - Processes quoted strings
+  - Manages word boundaries
 
-2. **Character Analysis**
-   - Input is processed character by character
-   - Special characters are identified
-   - Quotes are handled specially to maintain string integrity
+- **Operator Tokens**
+  ```c
+  bool ft_create_pipe_token(t_minishell *minishell);
+  bool ft_create_output_token(t_minishell *minishell);
+  bool ft_create_append_token(t_minishell *minishell);
+  bool ft_create_input_token(t_minishell *minishell);
+  bool ft_create_hdoc_token(t_minishell *minishell);
+  ```
+  - Creates specific token types
+  - Sets appropriate flags
+  - Manages operator recognition
 
-3. **Token Generation**
-   - Tokens are created based on delimiters (spaces, operators)
-   - Each token is assigned a type and ID
-   - Tokens are linked in a linked list structure
+### 2. Token Processing
+- Character-by-character analysis
+- Quote handling
+- Operator recognition
+- Word boundary detection
+- Error checking
 
-4. **Special Handling**
-   - Quotes (both single and double) are processed to maintain string integrity
-   - Environment variables are identified for later expansion
-   - Operators are properly separated and classified
+### 3. Quote Handling
+- Single quote preservation
+- Double quote processing
+- Escape sequence handling
+- Quote matching validation
 
-## Error Handling
-
-The tokenizer includes robust error handling for:
-- Unclosed quotes
-- Invalid operators
-- Syntax errors
+### 4. Error Detection
+- Syntax validation
+- Quote matching
+- Invalid operator sequences
 - Memory allocation failures
-
-## Integration
-
-The tokenizer works closely with:
-1. The parser (`srcs/parse/`)
-2. The expansion module (`srcs/expand/`)
-3. The main shell loop
-
-## Example
-
-Input:
-```bash
-echo "Hello $USER" | grep "Hello"
-```
-
-Tokenized as:
-1. `echo` (command token)
-2. `"Hello $USER"` (argument token with pending expansion)
-3. `|` (pipe operator token)
-4. `grep` (command token)
-5. `"Hello"` (argument token)
 
 ## Key Functions
 
-1. **Token Creation**
-   ```c
-   // Creates a new token with the given parameters
-   t_token *create_token(char *content, int type);
-   ```
+### 1. Tokenization Control
+```c
+bool ft_tokenization(t_minishell *minishell, char *input, int i);
+```
+- Main tokenization loop
+- Token type determination
+- Error handling
+- List management
 
-2. **Token List Management**
-   ```c
-   // Adds a token to the end of the token list
-   void add_token(t_token **list, t_token *new_token);
-   ```
+### 2. Token Operations
+```c
+bool ft_pipe(t_minishell *minishell, int *i);
+bool ft_great(t_minishell *minishell, int *i);
+bool ft_ggreat(t_minishell *minishell, int *i);
+bool ft_less(t_minishell *minishell, int *i);
+bool ft_lless(t_minishell *minishell, int *i);
+bool ft_word(t_minishell *minishell, char *input, int *i);
+```
+- Specific token handling
+- Position tracking
+- Error checking
+- Memory management
 
-3. **Token Classification**
-   ```c
-   // Determines the type of a token
-   int classify_token(char *content);
-   ```
-
-4. **Quote Handling**
-   ```c
-   // Processes quoted strings
-   char *handle_quotes(char *input, int *pos);
-   ```
+### 3. Token Validation
+```c
+bool ft_token_order(t_minishell *minishell);
+bool ft_check_pipe(t_minishell *minishell);
+bool ft_check_redir(t_minishell *minishell);
+```
+- Syntax validation
+- Token sequence checking
+- Error reporting
 
 ## Memory Management
 
-The tokenizer implements careful memory management:
-- Each token is dynamically allocated
-- Token content is properly duplicated
-- Memory is freed when tokens are no longer needed
-- Cleanup functions handle both success and error cases 
+### 1. Allocation
+- Token structure allocation
+- Content duplication
+- List management
+- Error handling
+
+### 2. Deallocation
+```c
+void ft_free_token_list(t_minishell *minishell);
+```
+- Complete list cleanup
+- Memory leak prevention
+- Error state handling
+
+## Error Handling
+
+### 1. Syntax Errors
+- Invalid token sequences
+- Unclosed quotes
+- Invalid operators
+- Missing arguments
+
+### 2. Memory Errors
+- Allocation failures
+- Cleanup on error
+- Resource management
+- Error propagation
+
+## Integration Points
+
+### 1. Parser Interface
+- Token list handoff
+- Error communication
+- Syntax validation
+- State management
+
+### 2. Expansion Interface
+- Quote preservation
+- Variable marking
+- Word boundary marking
+- Special character handling
+
+## Examples
+
+### 1. Basic Command
+```bash
+ls -l
+```
+Tokens:
+1. WORD("ls")
+2. WORD("-l")
+
+### 2. Pipeline
+```bash
+echo "hello" | grep "o"
+```
+Tokens:
+1. WORD("echo")
+2. WORD("hello")
+3. PIPE("|")
+4. WORD("grep")
+5. WORD("o")
+
+### 3. Redirections
+```bash
+cat < input.txt > output.txt
+```
+Tokens:
+1. WORD("cat")
+2. LESS("<")
+3. WORD("input.txt")
+4. GREAT(">")
+5. WORD("output.txt")
+
+### 4. Heredoc
+```bash
+cat << EOF
+```
+Tokens:
+1. WORD("cat")
+2. LLESS("<<")
+3. WORD("EOF") 

@@ -1,187 +1,233 @@
-# Command Execution Process
+# Command Execution
 
 ## Overview
+The execution component (`srcs/exec/`) is responsible for executing the command tree produced by the parser. It handles process creation, redirection setup, pipeline management, builtin execution, and error handling.
 
-The execution component (`srcs/exec/`) is responsible for executing commands and managing processes in the shell. It handles both built-in commands and external programs, manages pipelines, and handles redirections.
+## Core Components
 
-## Execution Components
-
-### 1. Command Execution Structure
+### 1. Command Executor
 ```c
-typedef struct s_exec {
-    pid_t       pid;            // Process ID
-    int         status;         // Exit status
-    int         pipe_fd[2];     // Pipe file descriptors
-    char        *path;          // Command path
-    char        **env;          // Environment variables
-} t_exec;
+int ft_execute_command(t_minishell *minishell, t_cmd *cmd);
 ```
+- Main execution entry point
+- Command type routing
+- Process management
+- Error handling
 
-## Execution Process
+### 2. Pipeline Executor
+```c
+int ft_execute_pipeline(t_minishell *minishell, t_cmd *cmd);
+```
+- Pipeline setup
+- Process creation
+- File descriptor management
+- Synchronization
 
-1. **Command Type Determination**
-   - Check if command is built-in
-   - Resolve command path for external programs
-   - Validate command existence
+### 3. Redirection Handler
+```c
+int ft_setup_redirections(t_cmd *cmd);
+```
+- File descriptor setup
+- Heredoc processing
+- File operations
+- Error handling
 
-2. **Process Creation**
-   - Fork new processes for external commands
-   - Set up process groups
-   - Handle job control
+### 4. Builtin Executor
+```c
+int ft_execute_builtin(t_minishell *minishell, t_cmd *cmd);
+```
+- Builtin command detection
+- Direct execution
+- Environment management
+- Return value handling
 
-3. **Redirection Setup**
-   - Configure input/output redirections
-   - Set up pipe connections
-   - Handle file descriptors
+## Implementation Details
 
-4. **Command Execution**
-   - Execute built-in commands directly
-   - Use execve for external commands
-   - Handle execution errors
+### 1. Process Management
+- Fork handling
+- Child process setup
+- Parent process coordination
+- Exit status collection
 
-5. **Process Management**
-   - Track child processes
-   - Handle process termination
-   - Collect exit status
+### 2. File Descriptor Management
+- Standard I/O redirection
+- Pipeline setup
+- File operations
+- Descriptor cleanup
 
-## Built-in Commands
+### 3. Environment Management
+- Variable expansion
+- Path resolution
+- Working directory
+- Signal handling
 
-The shell implements several built-in commands:
-1. `cd` - Change directory
-2. `echo` - Display text
-3. `pwd` - Print working directory
-4. `export` - Set environment variables
-5. `unset` - Remove environment variables
-6. `env` - Display environment
-7. `exit` - Exit the shell
+### 4. Heredoc Processing
+```c
+int ft_process_heredoc(t_redir *redir);
+```
+- Delimiter handling
+- Content collection
+- Signal management
+- Temporary file creation
 
-## Pipeline Execution
+## Execution Flow
 
-1. **Pipeline Setup**
-   - Create pipes between commands
-   - Set up process groups
-   - Configure redirections
+### 1. Command Analysis
+- Command type determination
+- Builtin detection
+- Path resolution
+- Permission checking
 
-2. **Process Creation**
-   - Fork processes for each command
-   - Connect pipes between processes
-   - Handle pipe errors
+### 2. Resource Setup
+- Process creation
+- File descriptor setup
+- Environment preparation
+- Signal configuration
 
-3. **Execution Flow**
-   - Execute commands in sequence
-   - Manage data flow through pipes
-   - Handle pipeline failures
+### 3. Command Execution
+- Process spawning
+- Redirection application
+- Pipeline coordination
+- Error handling
+
+### 4. Cleanup and Status
+- Resource deallocation
+- Exit status collection
+- Error propagation
+- State restoration
 
 ## Error Handling
 
-The execution module handles various errors:
+### 1. Execution Errors
 - Command not found
 - Permission denied
 - Fork failures
 - Pipe errors
-- Execution failures
 
-## Key Functions
+### 2. Resource Errors
+- File descriptor limits
+- Memory allocation
+- Process limits
+- System call failures
 
-### 1. Command Execution
+### 3. Signal Handling
+- Interrupt handling
+- Child process termination
+- Pipeline cleanup
+- State restoration
+
+## Memory Management
+
+### 1. Process Resources
+- File descriptor tracking
+- Child process cleanup
+- Pipeline management
+- Memory deallocation
+
+### 2. Command Cleanup
 ```c
-// Execute a single command
-int execute_command(t_cmd *cmd, t_minishell *minishell);
+void ft_cleanup_command(t_cmd *cmd);
 ```
+- Resource deallocation
+- File descriptor closure
+- Process termination
+- Error state handling
 
-### 2. Pipeline Management
-```c
-// Handle pipeline execution
-int execute_pipeline(t_cmd *cmd_list, t_minishell *minishell);
-```
+## Integration Points
 
-### 3. Built-in Command Handling
-```c
-// Execute built-in commands
-int execute_builtin(t_cmd *cmd, t_minishell *minishell);
-```
+### 1. Parser Interface
+- Command tree processing
+- Error propagation
+- Resource sharing
+- State management
 
-### 4. Process Management
-```c
-// Manage child processes
-int wait_for_processes(t_exec *exec);
-```
+### 2. Builtin Interface
+- Command detection
+- Direct execution
+- Environment access
+- Status reporting
 
-## Integration
+## Examples
 
-The execution module interacts with:
-1. Parser (receives command structures)
-2. Built-in commands module
-3. Environment management
-4. Signal handling
-
-## Example
-
-For the command:
+### 1. Simple Command
 ```bash
-ls -l | grep "file" > output.txt
+ls -l
 ```
+Execution:
+1. Fork process
+2. Execute command
+3. Collect status
 
-Execution flow:
+### 2. Pipeline
+```bash
+echo "hello" | grep "o"
+```
+Execution:
 1. Create pipe
-2. Fork first process (ls)
-   - Set up pipe write end
-   - Execute ls command
-3. Fork second process (grep)
-   - Set up pipe read end
-   - Set up output redirection
-   - Execute grep command
-4. Wait for both processes
-5. Clean up resources
+2. Fork for echo
+3. Fork for grep
+4. Connect pipe
+5. Execute commands
+6. Collect status
 
-## Process Management
+### 3. Redirections
+```bash
+cat < input.txt > output.txt
+```
+Execution:
+1. Open files
+2. Setup redirections
+3. Fork process
+4. Execute command
+5. Restore descriptors
 
-1. **Process Creation**
-   - Fork new processes
-   - Set process groups
-   - Handle parent/child relationships
+### 4. Heredoc
+```bash
+cat << EOF
+```
+Execution:
+1. Create temp file
+2. Collect content
+3. Setup redirection
+4. Execute command
+5. Cleanup temp file
 
-2. **Process Monitoring**
-   - Track active processes
-   - Handle process termination
-   - Collect exit status
+## Performance Considerations
 
-3. **Resource Management**
-   - Close unused file descriptors
-   - Clean up pipe resources
-   - Handle process cleanup
+### 1. Process Management
+- Minimal forking
+- Efficient pipe usage
+- Smart descriptor handling
+- Quick cleanup
 
-## Signal Handling
+### 2. Resource Usage
+- File descriptor limits
+- Memory consumption
+- Process table usage
+- System call optimization
 
-The execution module handles:
+### 3. Error Recovery
+- Graceful cleanup
+- Resource restoration
+- State preservation
+- Error propagation
+
+## Special Cases
+
+### 1. Signal Handling
 - SIGINT (Ctrl+C)
 - SIGQUIT (Ctrl+\)
 - SIGTERM
-- Custom signal handlers
+- Child process signals
 
-## Performance Optimization
+### 2. Exit Status
+- Command completion
+- Signal termination
+- Error conditions
+- Status propagation
 
-The execution module is optimized for:
-- Minimal process creation
-- Efficient pipe usage
-- Quick command resolution
-- Resource cleanup
-- Memory management
-
-## Error Recovery
-
-The module implements robust error recovery:
-1. **Process Failures**
-   - Handle fork failures
-   - Manage execution errors
-   - Clean up on failures
-
-2. **Resource Cleanup**
-   - Close file descriptors
-   - Remove temporary files
-   - Clean up child processes
-
-3. **State Recovery**
-   - Restore shell state
-   - Handle interrupted commands
-   - Maintain shell stability 
+### 3. Environment Updates
+- Variable changes
+- Directory changes
+- Shell state
+- Child inheritance 

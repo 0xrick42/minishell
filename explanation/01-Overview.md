@@ -1,95 +1,148 @@
 # Minishell Project Overview
 
-This document provides a comprehensive explanation of the minishell project, a simplified shell implementation that mimics basic functionalities of bash.
+## Introduction
+This document provides a comprehensive overview of the minishell project, a shell implementation that follows Unix shell behavior. The project emphasizes modularity, clean code organization, and robust error handling.
 
-## Project Structure
+## Architecture
 
-The project is organized into several key components:
+### 1. Core Components
 
-1. **Main Program** (`srcs/main.c`)
-   - Entry point of the shell
-   - Handles the main REPL (Read-Eval-Print Loop)
-   - Initializes the shell environment
-   - Manages command history
+#### Input Processing (`srcs/main.c`)
+- REPL (Read-Eval-Print Loop) implementation
+- Command history management
+- Signal handling setup
+- Environment initialization
 
-2. **Token Processing** (`srcs/token/`)
-   - Lexical analysis of input
-   - Token generation and classification
-   - Handles different types of tokens (commands, arguments, operators)
+#### Lexical Analysis (`srcs/token/`)
+- Character-by-character input processing
+- Token generation and classification
+- Quote handling
+- Operator recognition
+- Error detection
 
-3. **Parsing** (`srcs/parse/`)
-   - Syntax analysis
-   - Command structure generation
-   - Error detection and handling
+#### Parsing (`srcs/parse/`)
+- AST (Abstract Syntax Tree) construction
+- Command structure generation
+- Syntax validation
+- Pipeline setup
+- Redirection analysis
 
-4. **Execution** (`srcs/exec/`)
-   - Command execution logic
-   - Process management
-   - Pipeline handling
+#### Execution (`srcs/exec/`)
+- Command execution management
+- Process creation and control
+- Pipeline implementation
+- Redirection handling
+- Heredoc processing
+- Exit status management
 
-5. **Built-in Commands** (`srcs/builtins/`)
-   - Implementation of shell built-in commands
-   - Environment variable management
+#### Built-in Commands (`srcs/builtins/`)
+- Shell built-in implementation
+- Environment management
+- Directory navigation
+- Shell control
 
-6. **Expansion** (`srcs/expand/`)
-   - Variable expansion
-   - Quote handling
-   - Wildcard expansion
+#### Expansion (`srcs/expand/`)
+- Variable expansion
+- Quote processing
+- Word splitting
+- Special parameter handling
 
-7. **Signal Handling** (`srcs/signal/`)
-   - Custom signal handlers
-   - Terminal control
+### 2. Support Components
 
-8. **Utilities** (`srcs/utils/`)
-   - Helper functions
-   - Memory management
-   - String manipulation
+#### Environment Management
+- Environment variable tracking
+- Variable modification
+- Path resolution
+- Shell variable handling
 
-9. **Cleanup** (`srcs/clean/`)
-   - Memory deallocation
-   - Resource cleanup
+#### Signal Handling
+- Interactive signal management
+- Child process signals
+- Terminal control
 
-## Core Components
-
-### Command Line Interface
-The shell provides an interactive command-line interface where users can:
-- Enter commands
-- Use command history
-- Navigate using arrow keys
-- Handle signals (Ctrl+C, Ctrl+D)
-
-### Command Processing
-1. **Lexical Analysis**
-   - Breaks input into tokens
-   - Identifies command boundaries
-   - Handles quotes and special characters
-
-2. **Parsing**
-   - Creates command structures
-   - Validates syntax
-   - Prepares for execution
-
-3. **Execution**
-   - Executes built-in commands
-   - Creates child processes
-   - Manages pipelines
-   - Handles redirections
-
-### Features
-- Environment variable management
-- Built-in command implementation
-- Pipeline support
-- Signal handling
-- Error management
+#### Memory Management
+- Systematic resource tracking
+- Cleanup routines
+- Error recovery
 - Memory leak prevention
 
 ## Implementation Details
 
-Each component is designed to work independently while maintaining clear interfaces with other parts of the system. The project follows a modular approach, making it easier to maintain and extend functionality.
+### 1. Data Flow
+```
+Input → Tokenization → Parsing → Expansion → Execution
+```
 
-Further detailed documentation for each component can be found in their respective sections:
-- [02-Tokenization.md](02-Tokenization.md)
-- [03-Parsing.md](03-Parsing.md)
-- [04-Execution.md](04-Execution.md)
-- [05-Builtins.md](05-Builtins.md)
-- [06-Expansion.md](06-Expansion.md) 
+### 2. Key Features
+- Command execution
+- Pipeline support
+- Redirection handling
+- Environment management
+- Signal handling
+- History management
+- Error recovery
+
+### 3. Error Handling Strategy
+- Early error detection
+- Comprehensive validation
+- Proper cleanup on failures
+- Descriptive error messages
+- Recovery mechanisms
+
+### 4. Memory Management
+- Systematic allocation tracking
+- Proper deallocation
+- Resource cleanup
+- Error recovery procedures
+
+## Design Principles
+
+1. **Modularity**
+   - Clear component separation
+   - Well-defined interfaces
+   - Minimal coupling
+   - Maximum cohesion
+
+2. **Robustness**
+   - Comprehensive error handling
+   - Memory leak prevention
+   - Resource management
+   - Signal handling
+
+3. **Maintainability**
+   - Clean code organization
+   - Clear documentation
+   - Consistent style
+   - Logical structure
+
+4. **Efficiency**
+   - Optimized algorithms
+   - Minimal copying
+   - Resource reuse
+   - Smart memory management
+
+## Component Integration
+
+Each component is designed to work independently while maintaining clear interfaces with other parts:
+
+1. **Tokenizer → Parser**
+   - Token stream generation
+   - Syntax validation
+   - Error reporting
+
+2. **Parser → Executor**
+   - Command structure creation
+   - Pipeline setup
+   - Redirection configuration
+
+3. **Executor → Builtins**
+   - Command type detection
+   - Environment access
+   - Status management
+
+4. **Expansion → All Components**
+   - Variable resolution
+   - Quote processing
+   - Word splitting
+
+For detailed documentation on each component, see the respective documentation files in this directory. 

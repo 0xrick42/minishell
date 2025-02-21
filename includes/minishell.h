@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   minishell.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
+/*   By: ykhomsi <ykhomsi@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
-/*   Created: 2024/01/28 00:00:00 by aistierl          #+#    #+#             */
-/*   Updated: 2024/01/28 00:00:00 by aistierl         ###   ########.fr       */
+/*   Created: 2025/01/25 10:15:22 by ykhomsi          #+#    #+#             */
+/*   Updated: 2025/01/25 14:38:45 by ykhomsi         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -127,5 +127,11 @@ bool    ft_init_split(char const *s, char c, char ***split, int *words);
 bool    ft_process_word(char **split, char const *s, char c, int *pos);
 char    *ft_remove_quotes(char *str);
 bool    ft_in_quotes(char *str, int pos);
+
+/* Exit Status Functions */
+void    ft_set_exit_status(t_minishell *minishell, int status);
+int     ft_get_exit_status(t_minishell *minishell);
+void    ft_update_exit_status(t_minishell *minishell, int status);
+int     ft_get_last_status(t_minishell *minishell);
 
 #endif 

@@ -1,139 +1,207 @@
 # Parsing Process
 
 ## Overview
-
-The parsing component (`srcs/parse/`) is responsible for converting the token stream into meaningful command structures that can be executed by the shell. It performs syntax analysis and creates a structured representation of the command line input.
+The parsing component (`srcs/parse/`) transforms the token stream into an Abstract Syntax Tree (AST) representing the command structure. It validates syntax, handles command grouping, and prepares the command structure for execution.
 
 ## Command Structure
 
 ### Command Node
 ```c
 typedef struct s_cmd {
-    char        *cmd_name;      // Name of the command
-    char        **cmd_args;     // Array of command arguments
-    int         input_fd;       // Input file descriptor
-    int         output_fd;      // Output file descriptor
-    int         pipe_read;      // Read end of pipe
-    int         pipe_write;     // Write end of pipe
-    struct s_cmd *next_cmd;     // Next command in pipeline
+    t_cmd_type      cmd_type;       // Command type (SIMPLE, PIPE, etc.)
+    char            **args;         // Command arguments array
+    t_redir         *redirects;     // Redirection list
+    struct s_cmd    *left;          // Left command (for pipes)
+    struct s_cmd    *right;         // Right command (for pipes)
 } t_cmd;
 ```
 
-## Parsing Process
+### Redirection Node
+```c
+typedef struct s_redir {
+    t_redir_type    type;           // Redirection type
+    char            *file;          // Target file/heredoc delimiter
+    int             fd;             // File descriptor
+    struct s_redir  *next;          // Next redirection
+} t_redir;
+```
 
-1. **Token Analysis**
-   - Tokens are processed sequentially
-   - Command structures are built based on token types
-   - Syntax validation is performed
+## Implementation Details
 
-2. **Command Building**
-   - First token in a command group becomes the command name
-   - Subsequent tokens become arguments
-   - Redirection operators are processed
-   - Pipe operators create new command nodes
+### 1. Command Building
+```c
+t_cmd *ft_build_command(t_minishell *minishell, t_token *token);
+```
+- Constructs command nodes
+- Handles argument collection
+- Manages redirection setup
+- Builds pipeline structures
 
-3. **Redirection Handling**
-   - Input redirection (<)
-   - Output redirection (>, >>)
-   - Here-document (<<)
-   - File descriptor validation
+### 2. Pipeline Processing
+```c
+t_cmd *ft_build_pipeline(t_minishell *minishell, t_token *start, t_token *end);
+```
+- Creates pipeline nodes
+- Links commands
+- Validates pipe sequences
+- Manages file descriptors
 
-4. **Pipeline Construction**
-   - Multiple commands are linked
-   - Pipe file descriptors are set up
-   - Command relationships are established
+### 3. Redirection Handling
+```c
+bool ft_add_redirection(t_cmd *cmd, t_token *token);
+```
+- Processes redirection tokens
+- Sets up file descriptors
+- Handles heredoc setup
+- Validates file operations
+
+### 4. Argument Processing
+```c
+char **ft_collect_args(t_token *start, t_token *end);
+```
+- Collects command arguments
+- Handles word expansion
+- Manages memory allocation
+- Validates argument format
+
+## Parsing Steps
+
+### 1. Initial Validation
+- Token sequence validation
+- Syntax checking
+- Error detection
+- Command boundary identification
+
+### 2. Command Construction
+- Command type determination
+- Argument collection
+- Redirection setup
+- Pipeline creation
+
+### 3. AST Building
+- Node creation
+- Tree structure formation
+- Command linking
+- Error handling
+
+### 4. Final Validation
+- Tree structure verification
+- Resource allocation check
+- Command validity
+- Redirection validation
 
 ## Error Handling
 
-The parser handles various error conditions:
-- Invalid command syntax
-- Missing command arguments
+### 1. Syntax Errors
+- Invalid command sequences
+- Malformed pipelines
 - Redirection errors
-- Pipeline errors
+- Missing arguments
+
+### 2. Resource Errors
 - Memory allocation failures
-
-## Key Components
-
-### 1. Command List Management
-```c
-// Creates and manages the list of commands
-int ft_cmd_struct(char *input, t_minishell *minishell);
-```
-
-### 2. Argument Processing
-```c
-// Processes and stores command arguments
-int process_arguments(t_cmd *cmd, t_token *token);
-```
-
-### 3. Redirection Setup
-```c
-// Handles input/output redirections
-int setup_redirections(t_cmd *cmd, t_token *token);
-```
-
-### 4. Pipeline Management
-```c
-// Sets up command pipelines
-int setup_pipeline(t_cmd *cmd1, t_cmd *cmd2);
-```
-
-## Integration Points
-
-The parser interacts with:
-1. The tokenizer (receives token stream)
-2. The execution module (provides command structures)
-3. The expansion module (for variable and wildcard expansion)
-
-## Example
-
-For the input:
-```bash
-ls -l | grep "file" > output.txt
-```
-
-The parser creates:
-1. First command node:
-   - cmd_name: "ls"
-   - cmd_args: ["ls", "-l"]
-   - pipe_write: set to pipe's write end
-
-2. Second command node:
-   - cmd_name: "grep"
-   - cmd_args: ["grep", "file"]
-   - pipe_read: set to pipe's read end
-   - output_fd: file descriptor for "output.txt"
+- File descriptor limits
+- Pipeline setup errors
+- Cleanup on failure
 
 ## Memory Management
 
-The parser implements careful memory management:
-- Dynamic allocation for command structures
-- Proper cleanup of command lists
-- Handling of file descriptors
-- Resource cleanup on error conditions
+### 1. Structure Allocation
+- Command node allocation
+- Redirection node creation
+- Argument array management
+- Tree structure maintenance
 
-## Error Cases
+### 2. Cleanup
+```c
+void ft_free_command(t_cmd *cmd);
+```
+- Recursive tree cleanup
+- Resource deallocation
+- File descriptor cleanup
+- Error state handling
 
-The parser handles various error scenarios:
-1. **Syntax Errors**
-   - Missing command names
-   - Invalid redirection syntax
-   - Unclosed quotes
+## Integration Points
 
-2. **Resource Errors**
-   - File open failures
-   - Pipe creation failures
-   - Memory allocation failures
+### 1. Tokenizer Interface
+- Token list processing
+- Syntax validation
+- Error propagation
+- State management
 
-3. **Logic Errors**
-   - Invalid command sequences
-   - Pipeline misconfigurations
-   - Redirection conflicts
+### 2. Executor Interface
+- Command tree handoff
+- Resource sharing
+- Error communication
+- State synchronization
+
+## Examples
+
+### 1. Simple Command
+```bash
+ls -l
+```
+AST:
+```
+CMD_SIMPLE
+├── args: ["ls", "-l"]
+└── redirects: NULL
+```
+
+### 2. Pipeline
+```bash
+echo "hello" | grep "o"
+```
+AST:
+```
+CMD_PIPE
+├── left: CMD_SIMPLE
+│   └── args: ["echo", "hello"]
+└── right: CMD_SIMPLE
+    └── args: ["grep", "o"]
+```
+
+### 3. Redirections
+```bash
+cat < input.txt > output.txt
+```
+AST:
+```
+CMD_SIMPLE
+├── args: ["cat"]
+└── redirects:
+    ├── REDIR_IN ("input.txt")
+    └── REDIR_OUT ("output.txt")
+```
+
+### 4. Heredoc
+```bash
+cat << EOF
+```
+AST:
+```
+CMD_SIMPLE
+├── args: ["cat"]
+└── redirects:
+    └── REDIR_HEREDOC ("EOF")
+```
 
 ## Performance Considerations
 
-The parser is optimized for:
-- Efficient memory usage
-- Quick command structure creation
-- Minimal copying of data
-- Proper resource management 
+### 1. Memory Efficiency
+- Minimal copying
+- Efficient tree structure
+- Smart resource allocation
+- Prompt cleanup
+
+### 2. Processing Speed
+- Optimized tree traversal
+- Efficient node linking
+- Smart validation checks
+- Quick error detection
+
+### 3. Resource Management
+- File descriptor tracking
+- Memory usage monitoring
+- Pipeline optimization
+- Error recovery 
