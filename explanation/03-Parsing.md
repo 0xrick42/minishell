@@ -1,63 +1,62 @@
 # Parsing Process
 
 ## Overview
-The parsing component (`srcs/parse/`) transforms the token stream into an Abstract Syntax Tree (AST) representing the command structure. It validates syntax, handles command grouping, and prepares the command structure for execution.
+The parsing component (`srcs/parse/`) transforms the token stream into a linked list of commands representing the command structure. It validates syntax, handles command grouping, and prepares the command structure for execution.
 
 ## Command Structure
 
 ### Command Node
 ```c
 typedef struct s_cmd {
-    t_cmd_type      cmd_type;       // Command type (SIMPLE, PIPE, etc.)
-    char            **args;         // Command arguments array
-    t_redir         *redirects;     // Redirection list
-    struct s_cmd    *left;          // Left command (for pipes)
-    struct s_cmd    *right;         // Right command (for pipes)
+    char            *cmd_name;      // Name of the command
+    char            **cmd_args;     // Command arguments array
+    struct s_cmd    *next_cmd;      // Next command in list
 } t_cmd;
 ```
 
-### Redirection Node
+### Token Node
 ```c
-typedef struct s_redir {
-    t_redir_type    type;           // Redirection type
-    char            *file;          // Target file/heredoc delimiter
-    int             fd;             // File descriptor
-    struct s_redir  *next;          // Next redirection
-} t_redir;
+typedef struct s_token {
+    int             token_id;       // Token identifier
+    char            *token_name;    // Token content
+    t_token_type    token_type;     // Token classification
+    t_token_redir   token_redir;    // Redirection flag
+    struct s_token  *next_token;    // Next token in list
+} t_token;
 ```
 
 ## Implementation Details
 
 ### 1. Command Building
 ```c
-t_cmd *ft_build_command(t_minishell *minishell, t_token *token);
+bool ft_cmd_struct(char *input, t_minishell *minishell);
 ```
 - Constructs command nodes
 - Handles argument collection
 - Manages redirection setup
-- Builds pipeline structures
+- Builds command list
 
 ### 2. Pipeline Processing
 ```c
-t_cmd *ft_build_pipeline(t_minishell *minishell, t_token *start, t_token *end);
+bool ft_cmd_list(char *cmd_cell, t_minishell *minishell);
 ```
-- Creates pipeline nodes
-- Links commands
+- Creates command nodes
+- Links commands sequentially
 - Validates pipe sequences
 - Manages file descriptors
 
-### 3. Redirection Handling
+### 3. Token Processing
 ```c
-bool ft_add_redirection(t_cmd *cmd, t_token *token);
+bool ft_tokenization(t_minishell *minishell, char *input, int i);
 ```
-- Processes redirection tokens
-- Sets up file descriptors
-- Handles heredoc setup
-- Validates file operations
+- Processes input characters
+- Creates token nodes
+- Builds token list
+- Validates token sequence
 
 ### 4. Argument Processing
 ```c
-char **ft_collect_args(t_token *start, t_token *end);
+char **ft_split_cmd_args(char *cmd_cell);
 ```
 - Collects command arguments
 - Handles word expansion
@@ -78,14 +77,14 @@ char **ft_collect_args(t_token *start, t_token *end);
 - Redirection setup
 - Pipeline creation
 
-### 3. AST Building
+### 3. List Building
 - Node creation
-- Tree structure formation
+- List structure formation
 - Command linking
 - Error handling
 
 ### 4. Final Validation
-- Tree structure verification
+- List structure verification
 - Resource allocation check
 - Command validity
 - Redirection validation
@@ -108,15 +107,16 @@ char **ft_collect_args(t_token *start, t_token *end);
 
 ### 1. Structure Allocation
 - Command node allocation
-- Redirection node creation
+- Token node creation
 - Argument array management
-- Tree structure maintenance
+- List structure maintenance
 
 ### 2. Cleanup
 ```c
-void ft_free_command(t_cmd *cmd);
+void ft_free_cmd_list(t_cmd *cmd_list);
+void ft_free_token_list(t_minishell *minishell);
 ```
-- Recursive tree cleanup
+- List cleanup
 - Resource deallocation
 - File descriptor cleanup
 - Error state handling
@@ -130,7 +130,7 @@ void ft_free_command(t_cmd *cmd);
 - State management
 
 ### 2. Executor Interface
-- Command tree handoff
+- Command list handoff
 - Resource sharing
 - Error communication
 - State synchronization
@@ -141,61 +141,54 @@ void ft_free_command(t_cmd *cmd);
 ```bash
 ls -l
 ```
-AST:
+Command List:
 ```
-CMD_SIMPLE
-├── args: ["ls", "-l"]
-└── redirects: NULL
+[CMD_NODE]
+├── cmd_name: "ls"
+└── cmd_args: ["ls", "-l"]
 ```
 
 ### 2. Pipeline
 ```bash
 echo "hello" | grep "o"
 ```
-AST:
+Command List:
 ```
-CMD_PIPE
-├── left: CMD_SIMPLE
-│   └── args: ["echo", "hello"]
-└── right: CMD_SIMPLE
-    └── args: ["grep", "o"]
+[CMD_NODE_1] -> [CMD_NODE_2]
+├── cmd_name: "echo"     ├── cmd_name: "grep"
+└── cmd_args: ["echo",   └── cmd_args: ["grep", 
+              "hello"]              "o"]
 ```
 
 ### 3. Redirections
 ```bash
 cat < input.txt > output.txt
 ```
-AST:
+Token List:
 ```
-CMD_SIMPLE
-├── args: ["cat"]
-└── redirects:
-    ├── REDIR_IN ("input.txt")
-    └── REDIR_OUT ("output.txt")
+[WORD("cat")] -> [LESS("<")] -> [WORD("input.txt")] -> 
+[GREAT(">")] -> [WORD("output.txt")]
 ```
 
 ### 4. Heredoc
 ```bash
 cat << EOF
 ```
-AST:
+Token List:
 ```
-CMD_SIMPLE
-├── args: ["cat"]
-└── redirects:
-    └── REDIR_HEREDOC ("EOF")
+[WORD("cat")] -> [LLESS("<<")] -> [WORD("EOF")]
 ```
 
 ## Performance Considerations
 
 ### 1. Memory Efficiency
 - Minimal copying
-- Efficient tree structure
+- Efficient list traversal
 - Smart resource allocation
 - Prompt cleanup
 
 ### 2. Processing Speed
-- Optimized tree traversal
+- Optimized list traversal
 - Efficient node linking
 - Smart validation checks
 - Quick error detection
