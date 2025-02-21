@@ -1,145 +1,178 @@
-# Minishell Project Documentation
+# Welcome to Our Shell!
 
-## Project Overview
-This project implements a shell that handles command execution, pipes, redirections, environment variables, and built-in commands. It follows a modular design with clear separation of concerns.
+## What is This?
+This is a simple shell program, like bash or zsh, but made from scratch! It can run commands, handle pipes, work with files, and manage environment variables.
 
-## Code Structure
+## How Does It Work?
 
-### 1. Input Processing (`main.c`)
-- Uses readline for input handling
-- Command history management
-- Basic input validation
-- Signal handling setup
+### The Big Picture
+When you type a command, our shell:
+1. Reads what you typed
+2. Figures out what you want
+3. Does it!
 
-### 2. Lexical Analysis (`srcs/token/`)
-- **Token Creation**
-  - Handles different token types (WORD, PIPE, GREAT, GGREAT, LESS, LLESS)
-  - Quote-aware tokenization
-  - Proper memory management
-  - Error handling
+For example:
+```bash
+ls -l | grep .txt > output.txt
+```
+1. Reads: `ls -l | grep .txt > output.txt`
+2. Understands:
+   - Run `ls -l`
+   - Send its output to `grep .txt`
+   - Save grep's output to `output.txt`
+3. Does it all in order!
 
-- **Token Types**
-  ```c
-  typedef enum e_token_type {
-      WORD,      // Commands, arguments, filenames
-      GREAT,     // > redirection
-      GGREAT,    // >> redirection
-      LESS,      // < redirection
-      LLESS,     // << heredoc
-      PIPE       // | pipeline
-  } t_token_type;
-  ```
+### Main Parts
 
-### 3. Parsing (`srcs/parse/`)
-- Command structure creation
-- Syntax validation
-- Error detection
-- Pipeline setup
+#### 1. Reading Commands (`main.c`)
+- Gets your input (using readline)
+- Remembers command history
+- Handles Ctrl+C, Ctrl+D
 
-### 4. Expansion (`srcs/expand/`)
-- Environment variable expansion
-- Quote handling
-- Special parameter handling ($?, $$)
-- Word splitting
+#### 2. Understanding Words (`srcs/token/`)
+Breaks your command into pieces:
+```bash
+echo "hello world" > output.txt
+```
+Becomes:
+- Word: echo
+- Word: "hello world"
+- Redirect: >
+- Word: output.txt
 
-### 5. Execution (`srcs/exec/`)
-- Command execution
-- Pipeline management
-- Redirection handling
-- Heredoc processing
-- Process management
+#### 3. Understanding Commands (`srcs/parse/`)
+Takes the pieces and figures out:
+- What command to run
+- What arguments it needs
+- Where to send output
+- What files to use
 
-### 6. Built-in Commands (`srcs/builtins/`)
-- cd: Directory navigation
-- echo: Text output
-- pwd: Current directory
-- export: Environment variable management
-- unset: Variable removal
-- env: Environment display
-- exit: Shell termination
+#### 4. Making Commands Powerful (`srcs/expand/`)
+Handles special features:
+```bash
+echo "Hello $USER"     # Uses your username
+cd ~                  # Goes to your home
+echo $PATH            # Shows program locations
+```
 
-## Key Data Structures
+#### 5. Running Commands (`srcs/exec/`)
+- Runs the programs you ask for
+- Connects pipes
+- Handles files
+- Creates new processes
+
+#### 6. Built-in Commands (`srcs/builtins/`)
+Special commands that are part of the shell:
+- `cd`: Change directory
+- `echo`: Print text
+- `pwd`: Show current directory
+- `export`: Set variables
+- `unset`: Remove variables
+- `env`: Show variables
+- `exit`: Quit the shell
+
+## How Commands Are Stored
 
 ### Command Structure
 ```c
-typedef struct s_cmd {
-    char            *cmd_name;
-    char            **cmd_args;
-    struct s_cmd    *next_cmd;
-} t_cmd;
+struct s_cmd {
+    char *cmd_name;         // Program to run
+    char **cmd_args;        // Arguments for program
+    struct s_cmd *next_cmd; // Next command (for pipes)
+};
 ```
 
-### Token Structure
+Example:
+```bash
+ls -l | grep .txt
+```
+Becomes:
+```
+Command 1:           Command 2:
+cmd_name: "ls"       cmd_name: "grep"
+cmd_args:            cmd_args:
+  [0]: "ls"           [0]: ".txt"
+  [1]: "-l"           [1]: NULL
+  [2]: NULL           [2]: NULL
+next_cmd: ------>    next_cmd: NULL
+```
+
+### Environment Variables
 ```c
-typedef struct s_token {
-    int             token_id;
-    char            *token_name;
-    t_token_type    token_type;
-    t_token_redir   token_redir;
-    struct s_token  *next_token;
-} t_token;
+struct s_envar {
+    char *key;             // Variable name
+    char *value;           // Variable value
+    struct s_envar *next;  // Next variable
+};
 ```
 
-### Environment Variable Structure
-```c
-typedef struct s_envar {
-    char            *key;
-    char            *value;
-    struct s_envar  *next;
-} t_envar;
+Example:
+```
+HOME=/home/user
+↓
+PATH=/usr/bin
+↓
+USER=rick
+↓
+NULL
 ```
 
-## Processing Flow
+## How It All Works Together
 
-1. **Input Processing**
-   ```
-   readline() → input validation → history management
-   ```
-
-2. **Tokenization**
-   ```
-   input → lexical analysis → token list creation
+1. **Getting Input**
+   ```bash
+   $ ls -l | grep .txt > output.txt
    ```
 
-3. **Parsing**
+2. **Breaking into Words**
    ```
-   token list → syntax validation → command structure creation
-   ```
-
-4. **Expansion**
-   ```
-   command args → variable expansion → quote removal
+   [ls] [-l] [|] [grep] [.txt] [>] [output.txt]
    ```
 
-5. **Execution**
+3. **Understanding Structure**
    ```
-   command structure → redirection setup → process management
+   Command: ls -l
+   | (pipe to)
+   Command: grep .txt
+   > (output to file)
+   File: output.txt
    ```
 
-## Error Handling
-- Comprehensive error checking
-- Memory leak prevention
-- Proper cleanup on failures
-- Descriptive error messages
+4. **Running Everything**
+   - Start ls -l
+   - Connect its output to grep
+   - Start grep .txt
+   - Send grep's output to output.txt
+   - Wait for both to finish
 
-## Memory Management
-- Systematic allocation tracking
-- Proper deallocation
-- Resource cleanup
-- Error recovery
+## Want to Learn More?
 
-## Features
-- Command execution
-- Pipeline support
-- Redirection handling
-- Environment management
-- Signal handling
-- History management
+Check out these detailed guides:
+- [01-Overview.md](01-Overview.md): The big picture
+- [02-Tokenization.md](02-Tokenization.md): Breaking commands into pieces
+- [03-Parsing.md](03-Parsing.md): Understanding command structure
+- [04-Execution.md](04-Execution.md): Running commands
+- [05-Builtins.md](05-Builtins.md): Special shell commands
+- [06-Expansion.md](06-Expansion.md): Making commands powerful
 
-For detailed documentation on each component, see:
-- [01-Overview.md](01-Overview.md)
-- [02-Tokenization.md](02-Tokenization.md)
-- [03-Parsing.md](03-Parsing.md)
-- [04-Execution.md](04-Execution.md)
-- [05-Builtins.md](05-Builtins.md)
-- [06-Expansion.md](06-Expansion.md) 
+## Common Problems and Solutions
+
+### 1. Command Not Found
+- Check if command exists
+- Check if it's in PATH
+- Try using full path
+
+### 2. Permission Denied
+- Check file permissions
+- Try with sudo (if you have it)
+- Check directory permissions
+
+### 3. Pipe/Redirection Problems
+- Check file permissions
+- Make sure directories exist
+- Check disk space
+
+### 4. Variable Problems
+- Check variable exists: `env`
+- Check spelling (case sensitive)
+- Use quotes if spaces: "$VAR" 

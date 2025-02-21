@@ -1,237 +1,222 @@
-# Variable and Word Expansion
+# Making Commands More Powerful (Expansion)
 
-## Overview
+## What is Expansion?
+When you type a command, the shell does some magic before running it. This magic is called "expansion". It's like the shell's search-and-replace feature!
 
-The expansion component (`srcs/expand/`) handles various types of expansions in the shell, including environment variables, wildcards, and special parameters. This process transforms the raw input into its final form before execution.
+## Types of Magic (Expansions)
 
-## Types of Expansion
-
-### 1. Environment Variable Expansion
-- Expands `$VAR` and `${VAR}` syntax
-- Handles special variables ($?, $0, etc.)
-- Processes quoted strings
-- Manages undefined variables
-
-### 2. Tilde Expansion
-- Expands `~` to home directory
-- Handles `~user` expansion
-- Processes in specific contexts
-- Maintains path integrity
-
-### 3. Word Splitting
-- Splits expanded results
-- Handles IFS (Internal Field Separator)
-- Preserves quoted strings
-- Manages special cases
-
-## Implementation Details
-
-### Expansion Structure
-```c
-typedef struct s_expand {
-    char    *input;         // Input string
-    char    *result;       // Expanded result
-    int     in_quotes;     // Quote state
-    int     in_dquotes;    // Double quote state
-    size_t  pos;           // Current position
-} t_expand;
+### 1. Environment Variables ($VAR)
+```bash
+# Examples:
+echo $HOME           # Shows your home folder
+echo $USER           # Shows your username
+echo $PATH           # Shows where programs are
+echo ${NAME}         # Same as $NAME but clearer
 ```
 
-## Expansion Process
+How it works:
+1. Shell sees a $ sign
+2. Gets the variable name after it
+3. Looks up the value
+4. Replaces $NAME with its value
 
-1. **Variable Recognition**
-   - Identify variable markers ($)
-   - Parse variable names
-   - Handle special cases
-   - Process braces ${...}
+Code:
+```c
+char *expand_variables(char *str, t_minishell *minishell)
+{
+    char *result = NULL;
+    size_t i = 0;
+    
+    while (str[i]) {
+        if (str[i] == '$' && is_valid_var_char(str[i + 1]))
+            add_variable_value(&result, get_var_name(&str[i + 1]), minishell);
+        else
+            add_char(&result, str[i]);
+        i++;
+    }
+    return result;
+}
+```
 
-2. **Quote Processing**
-   - Handle single quotes (no expansion)
-   - Process double quotes (limited expansion)
-   - Manage escape characters
-   - Preserve quote integrity
+### 2. Home Directory (~)
+```bash
+# Examples:
+cd ~               # Go to your home
+ls ~/Documents     # List your Documents
+echo ~rick         # Show rick's home
+```
 
-3. **Value Substitution**
-   - Look up variable values
-   - Handle undefined variables
-   - Process special parameters
-   - Manage expansion results
+How it works:
+1. Shell sees ~ at start of word
+2. If alone or followed by /, uses your home
+3. If followed by username, uses that user's home
+4. Replaces ~ with the full path
 
-## Key Functions
+Code:
+```c
+char *expand_tilde(char *str, t_minishell *minishell)
+{
+    if (str[0] != '~')
+        return strdup(str);
+        
+    if (!str[1] || str[1] == '/')
+        return get_home_dir(minishell);
+        
+    return get_user_home(&str[1]);
+}
+```
 
-### 1. Variable Expansion
+### 3. Special Variables
+```bash
+# Examples:
+echo $?            # Last command's status (0 = success)
+echo $$            # Current shell's process ID
+echo $!            # Last background job's process ID
+echo $0            # Name of the shell
+```
+
+How it works:
+1. Shell sees special $ pattern
+2. Recognizes special character
+3. Gets the special value
+4. Replaces it in command
+
+Code:
+```c
+char *expand_special(char special_char, t_minishell *minishell)
+{
+    switch (special_char) {
+        case '?':
+            return ft_itoa(minishell->last_status);
+        case '$':
+            return ft_itoa(getpid());
+        case '!':
+            return ft_itoa(minishell->last_background_pid);
+        case '0':
+            return strdup(minishell->shell_name);
+        default:
+            return strdup("");
+    }
+}
+```
+
+## How Quotes Work
+
+### 1. Double Quotes (")
+```bash
+# Examples:
+echo "Hello $USER"  # Variables work: Hello rick
+echo "Path: $PATH"  # Variables work
+echo "~"           # ~ doesn't work: prints ~
+```
+
+How it works:
+- Variables ($) still work
+- ~ doesn't work
+- Spaces are kept as-is
+
+### 2. Single Quotes (')
+```bash
+# Examples:
+echo 'Hello $USER'  # Prints exactly: Hello $USER
+echo '$PATH'       # Prints exactly: $PATH
+echo '~'          # Prints exactly: ~
+```
+
+How it works:
+- Everything is kept exactly as typed
+- No expansions happen at all
+- Great for passwords/special characters
+
+## Common Problems and Solutions
+
+### 1. Variable Problems
+```bash
+# Problem: Variable not set
+echo $NOTSET       # Prints nothing
+echo ${NOTSET}     # Prints nothing
+
+# Solution: Use default value
+echo ${NOTSET:-default}  # Prints: default
+```
+
+### 2. Quote Problems
+```bash
+# Problem: Nested quotes
+echo "He said "hello""  # Error!
+
+# Solution: Use different quotes
+echo "He said 'hello'"  # Works!
+```
+
+### 3. Space Problems
+```bash
+# Problem: Spaces in variables
+FILE="my file.txt"
+cat $FILE          # Error: tries to open "my" and "file.txt"
+
+# Solution: Use quotes
+cat "$FILE"        # Works: opens "my file.txt"
+```
+
+## Try It Yourself!
+
+```bash
+# 1. Environment variables
+echo "Hello $USER"         # Your username
+echo "Home: $HOME"        # Your home folder
+echo "Shell: $SHELL"      # Your shell program
+
+# 2. Special characters
+echo "Last result: $?"    # 0 if previous worked
+echo "Shell PID: $$"      # Shell's process number
+
+# 3. Quotes
+echo "Double $HOME"       # Expands $HOME
+echo 'Single $HOME'      # Prints $HOME as-is
+```
+
+## Behind the Scenes
+
+The expansion happens in this order:
+1. Read the command
+2. Find special characters ($, ~, quotes)
+3. Do the right expansion
+4. Remove quotes
+5. Pass to command
+
+For example:
+```bash
+echo "Hello $USER!"
+```
+1. Find ": start remembering spaces
+2. Find $USER: get username (rick)
+3. Find ": stop remembering spaces
+4. Result: echo Hello rick!
+
+## Code Structure
+
 ```c
 // Main expansion function
-char *expand_variables(char *input, t_minishell *minishell);
-
-// Process single variable
-char *expand_single_var(char *var_name, t_minishell *minishell);
-```
-
-### 2. Quote Handling
-```c
-// Process quoted strings
-char *handle_quotes(char *input, size_t *pos);
-
-// Handle escape sequences
-char *process_escapes(char *input, size_t *pos);
-```
-
-### 3. Word Processing
-```c
-// Split words after expansion
-char **split_words(char *expanded);
-
-// Handle field separation
-char **field_splitting(char *input);
-```
-
-## Special Cases
-
-### 1. Special Parameters
-- `$?` - Last command status
-- `$0` - Shell name
-- `$$` - Shell PID
-- `$!` - Last background PID
-
-### 2. Brace Expansion
-- `${VAR}`
-- `${VAR:-default}`
-- `${VAR:=default}`
-- `${VAR:?error}`
-
-### 3. Quote Handling
-- Single quotes (no expansion)
-- Double quotes (variable expansion)
-- Escaped characters
-- Nested quotes
-
-## Error Handling
-
-1. **Variable Errors**
-   - Undefined variables
-   - Invalid names
-   - Syntax errors
-   - Recursion limits
-
-2. **Quote Errors**
-   - Unclosed quotes
-   - Invalid escapes
-   - Nested quote issues
-   - Syntax problems
-
-3. **Memory Management**
-   - Allocation failures
-   - Buffer management
-   - Memory leaks
-   - Resource cleanup
-
-## Integration
-
-The expansion module interacts with:
-1. Parser
-2. Environment management
-3. Command execution
-4. Error handling
-
-## Examples
-
-### Variable Expansion
-```bash
-echo $HOME           # Basic expansion
-echo ${PATH}         # Braced expansion
-echo "$USER"        # Quoted expansion
-echo '${HOME}'      # No expansion (single quotes)
-```
-
-### Special Cases
-```bash
-echo $?             # Exit status
-echo "~"           # Tilde in quotes
-echo $VAR-suffix   # Variable with suffix
-echo "${VAR:-default}"  # Default value
-```
-
-## Performance Optimization
-
-The expansion module is optimized for:
-1. **Memory Usage**
-   - Efficient string handling
-   - Minimal copying
-   - Buffer reuse
-   - Dynamic allocation
-
-2. **Processing Speed**
-   - Quick lookups
-   - Efficient parsing
-   - Minimal recursion
-   - Cached results
-
-3. **Resource Management**
-   - Smart buffer sizing
-   - Memory pooling
-   - Resource reuse
-   - Cleanup optimization
-
-## Security Considerations
-
-1. **Input Validation**
-   - Sanitize variable names
-   - Check path expansions
-   - Validate substitutions
-   - Handle overflow
-
-2. **Environment Safety**
-   - Protect sensitive variables
-   - Validate expansions
-   - Handle special cases
-   - Prevent injection
-
-3. **Error Prevention**
-   - Bounds checking
-   - Null handling
-   - Quote validation
-   - Syntax verification
-
-## Testing Scenarios
-
-1. **Basic Cases**
-   ```bash
-   echo $HOME
-   echo ${PATH}
-   echo "$USER"
-   ```
-
-2. **Complex Cases**
-   ```bash
-   echo ${VAR:-default}
-   echo "$VAR"suffix
-   echo '${HOME}'
-   ```
-
-3. **Error Cases**
-   ```bash
-   echo ${undefined}
-   echo "${"
-   echo "'unclosed
-   ```
-
-## Implementation Notes
-
-1. **Parsing Strategy**
-   - Character-by-character processing
-   - State machine approach
-   - Context awareness
-   - Error recovery
-
-2. **Memory Management**
-   - Dynamic allocation
-   - Buffer management
-   - Cleanup routines
-   - Resource tracking
-
-3. **Integration Points**
-   - Parser coordination
-   - Environment access
-   - Error propagation
-   - State management 
+char *expand_command(char *input, t_minishell *minishell)
+{
+    char *result = strdup(input);
+    
+    // 1. Handle quotes
+    result = handle_quotes(result);
+    if (!result)
+        return NULL;
+        
+    // 2. Expand variables
+    result = expand_variables(result, minishell);
+    if (!result)
+        return NULL;
+        
+    // 3. Handle tilde
+    result = expand_tilde(result, minishell);
+    if (!result)
+        return NULL;
+        
+    return result;
+}
+``` 

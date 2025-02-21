@@ -1,151 +1,165 @@
 # Command Execution
 
-## Overview
-The execution component (`srcs/exec/`) is responsible for executing the command tree produced by the parser. It handles process creation, redirection setup, pipeline management, builtin execution, and error handling.
+## What Happens When Commands Run?
 
-## Core Components
+The execution component (`srcs/exec/`) is responsible for actually running your commands. Think of it as the part that takes your command list and makes things happen!
 
-### 1. Command Executor
+## Main Parts
+
+### 1. Command Runner
 ```c
 int ft_execute_command(t_minishell *minishell, t_cmd *cmd);
 ```
-- Main execution entry point
-- Command type routing
-- Process management
-- Error handling
+This is the main function that:
+- Figures out what kind of command to run
+- Creates new processes when needed
+- Handles any errors that happen
+- Returns the result
 
-### 2. Pipeline Executor
+### 2. Pipeline Handler
 ```c
 int ft_execute_pipeline(t_minishell *minishell, t_cmd *cmd);
 ```
-- Pipeline setup
-- Process creation
-- File descriptor management
-- Synchronization
+When you use pipes (like `cmd1 | cmd2`), this function:
+- Creates the pipe
+- Sets up both commands
+- Connects them together
+- Makes sure data flows correctly
 
-### 3. Redirection Handler
+### 3. Redirection Setup
 ```c
 int ft_setup_redirections(t_cmd *cmd);
 ```
-- File descriptor setup
-- Heredoc processing
-- File operations
-- Error handling
+When you use `>`, `<`, `>>`, or `<<`, this function:
+- Opens the right files
+- Connects them to the command
+- Handles any file errors
+- Sets up heredocs (for `<<`)
 
-### 4. Builtin Executor
+### 4. Built-in Command Runner
 ```c
 int ft_execute_builtin(t_minishell *minishell, t_cmd *cmd);
 ```
-- Builtin command detection
-- Direct execution
-- Environment management
-- Return value handling
+For built-in commands (like `cd` or `echo`), this:
+- Recognizes the built-in command
+- Runs it directly (no new process needed)
+- Handles the command's arguments
+- Returns the result
 
-## Implementation Details
+## How It All Works
 
 ### 1. Process Management
-- Fork handling
-- Child process setup
-- Parent process coordination
-- Exit status collection
+When running commands, the shell:
+- Creates new processes (using `fork`)
+- Sets up each process correctly
+- Waits for commands to finish
+- Collects their exit status
 
-### 2. File Descriptor Management
-- Standard I/O redirection
-- Pipeline setup
-- File operations
-- Descriptor cleanup
+### 2. File Management
+For files and pipes, it:
+- Opens files safely
+- Sets up pipe connections
+- Makes sure files are readable/writable
+- Cleans up when done
 
-### 3. Environment Management
-- Variable expansion
-- Path resolution
-- Working directory
-- Signal handling
+### 3. Environment Setup
+Before running commands:
+- Sets up environment variables
+- Finds command locations (in PATH)
+- Handles current directory
+- Manages signals (like Ctrl+C)
 
-### 4. Heredoc Processing
-```c
-int ft_process_heredoc(t_redir *redir);
-```
-- Delimiter handling
-- Content collection
-- Signal management
-- Temporary file creation
+### 4. Heredoc Handling
+For `<<` heredocs:
+- Creates a temporary file
+- Reads input until delimiter
+- Sets up the input properly
+- Cleans up after use
 
-## Execution Flow
+## Step by Step Example
 
-### 1. Command Analysis
-- Command type determination
-- Builtin detection
-- Path resolution
-- Permission checking
+### Simple Command: `ls -l`
+1. Shell creates new process
+2. In new process:
+   - Finds `ls` in PATH
+   - Sets up arguments (`-l`)
+   - Runs the command
+3. Waits for finish
+4. Shows result
 
-### 2. Resource Setup
-- Process creation
-- File descriptor setup
-- Environment preparation
-- Signal configuration
+### Pipeline: `echo hello | grep o`
+1. Shell creates a pipe
+2. Creates process for `echo`:
+   - Connects its output to pipe
+   - Runs `echo hello`
+3. Creates process for `grep`:
+   - Connects its input to pipe
+   - Runs `grep o`
+4. Waits for both
+5. Shows result
 
-### 3. Command Execution
-- Process spawning
-- Redirection application
-- Pipeline coordination
-- Error handling
-
-### 4. Cleanup and Status
-- Resource deallocation
-- Exit status collection
-- Error propagation
-- State restoration
+### Redirection: `cat < input.txt > output.txt`
+1. Shell opens `input.txt`
+2. Opens `output.txt`
+3. Creates process for `cat`:
+   - Connects input to `input.txt`
+   - Connects output to `output.txt`
+4. Runs command
+5. Cleans up files
 
 ## Error Handling
 
-### 1. Execution Errors
-- Command not found
-- Permission denied
-- Fork failures
-- Pipe errors
+The shell watches for:
+1. **Command Errors**
+   - Command not found
+   - Permission denied
+   - Can't create process
+   - Pipe errors
 
-### 2. Resource Errors
-- File descriptor limits
-- Memory allocation
-- Process limits
-- System call failures
+2. **Resource Errors**
+   - Can't open files
+   - Out of memory
+   - Too many processes
+   - System call fails
 
-### 3. Signal Handling
-- Interrupt handling
-- Child process termination
-- Pipeline cleanup
-- State restoration
+3. **Signal Handling**
+   - Ctrl+C (interrupt)
+   - Child process stops
+   - Cleanup needed
+   - State recovery
 
-## Memory Management
+## Memory Care
 
-### 1. Process Resources
-- File descriptor tracking
-- Child process cleanup
-- Pipeline management
-- Memory deallocation
+The shell is careful with:
+1. **Process Resources**
+   - Tracks open files
+   - Cleans up child processes
+   - Manages pipes
+   - Frees memory
 
-### 2. Command Cleanup
+2. **Command Cleanup**
 ```c
 void ft_cleanup_command(t_cmd *cmd);
 ```
-- Resource deallocation
-- File descriptor closure
-- Process termination
-- Error state handling
+This function:
+- Frees all memory
+- Closes all files
+- Stops all processes
+- Handles errors
 
-## Integration Points
+## Working Together
 
-### 1. Parser Interface
-- Command tree processing
-- Error propagation
-- Resource sharing
-- State management
+### 1. With Parser
+- Gets command list
+- Reports errors back
+- Shares resources
+- Manages state
 
-### 2. Builtin Interface
-- Command detection
-- Direct execution
-- Environment access
-- Status reporting
+### 2. With Built-ins
+- Finds built-in commands
+- Runs them directly
+- Accesses environment
+- Reports results
 
 ## Examples
 
@@ -153,81 +167,81 @@ void ft_cleanup_command(t_cmd *cmd);
 ```bash
 ls -l
 ```
-Execution:
-1. Fork process
-2. Execute command
-3. Collect status
+What happens:
+1. Fork new process
+2. Run command
+3. Get result
 
 ### 2. Pipeline
 ```bash
 echo "hello" | grep "o"
 ```
-Execution:
-1. Create pipe
+What happens:
+1. Make pipe
 2. Fork for echo
 3. Fork for grep
 4. Connect pipe
-5. Execute commands
-6. Collect status
+5. Run both
+6. Get result
 
 ### 3. Redirections
 ```bash
 cat < input.txt > output.txt
 ```
-Execution:
+What happens:
 1. Open files
-2. Setup redirections
+2. Set up redirection
 3. Fork process
-4. Execute command
-5. Restore descriptors
+4. Run command
+5. Clean up files
 
 ### 4. Heredoc
 ```bash
 cat << EOF
 ```
-Execution:
-1. Create temp file
-2. Collect content
-3. Setup redirection
-4. Execute command
-5. Cleanup temp file
+What happens:
+1. Make temp file
+2. Get input
+3. Set up redirection
+4. Run command
+5. Clean up
 
-## Performance Considerations
+## Making It Fast
 
 ### 1. Process Management
-- Minimal forking
-- Efficient pipe usage
-- Smart descriptor handling
-- Quick cleanup
+- Create processes efficiently
+- Use pipes smartly
+- Handle files quickly
+- Clean up promptly
 
 ### 2. Resource Usage
-- File descriptor limits
-- Memory consumption
-- Process table usage
-- System call optimization
+- Watch file limits
+- Manage memory well
+- Track processes
+- Optimize system calls
 
 ### 3. Error Recovery
-- Graceful cleanup
-- Resource restoration
-- State preservation
-- Error propagation
+- Clean up nicely
+- Restore resources
+- Keep state safe
+- Report errors clearly
 
 ## Special Cases
 
 ### 1. Signal Handling
-- SIGINT (Ctrl+C)
-- SIGQUIT (Ctrl+\)
-- SIGTERM
-- Child process signals
+- Ctrl+C (SIGINT)
+- Ctrl+\ (SIGQUIT)
+- Process end (SIGTERM)
+- Child signals
 
 ### 2. Exit Status
 - Command completion
-- Signal termination
-- Error conditions
-- Status propagation
+- Signal stops
+- Error cases
+- Status passing
 
-### 3. Environment Updates
-- Variable changes
+### 3. Environment Changes
+- Variable updates
 - Directory changes
 - Shell state
 - Child inheritance 

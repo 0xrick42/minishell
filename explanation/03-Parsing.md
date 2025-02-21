@@ -1,200 +1,196 @@
-# Parsing Process
+# Understanding Commands (Parsing)
 
-## Overview
-The parsing component (`srcs/parse/`) transforms the token stream into a linked list of commands representing the command structure. It validates syntax, handles command grouping, and prepares the command structure for execution.
+## What is Parsing?
+After breaking the command into tokens, the shell needs to understand what to do with them. This is called parsing. It's like taking the words of a sentence and figuring out the meaning.
 
-## Command Structure
+## What the Parser Creates
 
-### Command Node
+### Command Structure
+Each command is stored in this structure:
 ```c
 typedef struct s_cmd {
-    char            *cmd_name;      // Name of the command
-    char            **cmd_args;     // Command arguments array
-    struct s_cmd    *next_cmd;      // Next command in list
+    char            *cmd_name;      // The program to run (like "ls" or "echo")
+    char            **cmd_args;     // All arguments including the program name
+    struct s_cmd    *next_cmd;      // Next command (for pipes)
 } t_cmd;
 ```
 
-### Token Node
+For example, `ls -l` becomes:
 ```c
-typedef struct s_token {
-    int             token_id;       // Token identifier
-    char            *token_name;    // Token content
-    t_token_type    token_type;     // Token classification
-    t_token_redir   token_redir;    // Redirection flag
-    struct s_token  *next_token;    // Next token in list
-} t_token;
+cmd_name = "ls"
+cmd_args = ["ls", "-l", NULL]
+next_cmd = NULL
 ```
 
-## Implementation Details
+## How Parsing Works (Step by Step)
 
-### 1. Command Building
+### Step 1: Initial Check
 ```c
-bool ft_cmd_struct(char *input, t_minishell *minishell);
+bool ft_parsing(t_minishell *minishell, char *input)
 ```
-- Constructs command nodes
-- Handles argument collection
-- Manages redirection setup
-- Builds command list
+1. Checks for unclosed quotes: `echo "hello`
+2. Checks for unsupported characters: `ls ; cat`
+3. Makes sure the input isn't empty
 
-### 2. Pipeline Processing
+### Step 2: Building Commands
 ```c
-bool ft_cmd_list(char *cmd_cell, t_minishell *minishell);
+bool ft_cmd_struct(char *input, t_minishell *minishell)
 ```
-- Creates command nodes
-- Links commands sequentially
-- Validates pipe sequences
-- Manages file descriptors
+1. Takes the token list
+2. Groups tokens into commands
+3. Handles pipes and redirections
+4. Creates command nodes
 
-### 3. Token Processing
+### Step 3: Processing Arguments
 ```c
-bool ft_tokenization(t_minishell *minishell, char *input, int i);
+char **ft_split_cmd_args(char *cmd_cell)
 ```
-- Processes input characters
-- Creates token nodes
-- Builds token list
-- Validates token sequence
+1. Collects all arguments for a command
+2. Handles quotes properly
+3. Creates NULL-terminated array
+4. Manages memory carefully
 
-### 4. Argument Processing
+### Step 4: Connecting Commands
 ```c
-char **ft_split_cmd_args(char *cmd_cell);
+bool ft_cmd_list(char *cmd_cell, t_minishell *minishell)
 ```
-- Collects command arguments
-- Handles word expansion
-- Manages memory allocation
-- Validates argument format
+1. Links commands together for pipes
+2. Sets up input/output connections
+3. Validates the command structure
+4. Prepares for execution
 
-## Parsing Steps
-
-### 1. Initial Validation
-- Token sequence validation
-- Syntax checking
-- Error detection
-- Command boundary identification
-
-### 2. Command Construction
-- Command type determination
-- Argument collection
-- Redirection setup
-- Pipeline creation
-
-### 3. List Building
-- Node creation
-- List structure formation
-- Command linking
-- Error handling
-
-### 4. Final Validation
-- List structure verification
-- Resource allocation check
-- Command validity
-- Redirection validation
-
-## Error Handling
-
-### 1. Syntax Errors
-- Invalid command sequences
-- Malformed pipelines
-- Redirection errors
-- Missing arguments
-
-### 2. Resource Errors
-- Memory allocation failures
-- File descriptor limits
-- Pipeline setup errors
-- Cleanup on failure
-
-## Memory Management
-
-### 1. Structure Allocation
-- Command node allocation
-- Token node creation
-- Argument array management
-- List structure maintenance
-
-### 2. Cleanup
-```c
-void ft_free_cmd_list(t_cmd *cmd_list);
-void ft_free_token_list(t_minishell *minishell);
-```
-- List cleanup
-- Resource deallocation
-- File descriptor cleanup
-- Error state handling
-
-## Integration Points
-
-### 1. Tokenizer Interface
-- Token list processing
-- Syntax validation
-- Error propagation
-- State management
-
-### 2. Executor Interface
-- Command list handoff
-- Resource sharing
-- Error communication
-- State synchronization
-
-## Examples
+## Examples with Step-by-Step Breakdown
 
 ### 1. Simple Command
 ```bash
 ls -l
 ```
-Command List:
+Parser steps:
+1. Create new command node
+2. Set cmd_name to "ls"
+3. Create cmd_args array: ["ls", "-l", NULL]
+4. Set next_cmd to NULL
+
+Result:
 ```
-[CMD_NODE]
+Command Node
 ├── cmd_name: "ls"
-└── cmd_args: ["ls", "-l"]
+├── cmd_args: ["ls", "-l", NULL]
+└── next_cmd: NULL
 ```
 
 ### 2. Pipeline
 ```bash
-echo "hello" | grep "o"
+echo hello | grep o
 ```
-Command List:
+Parser steps:
+1. Create first command node (echo)
+   - cmd_name: "echo"
+   - cmd_args: ["echo", "hello", NULL]
+2. Create second command node (grep)
+   - cmd_name: "grep"
+   - cmd_args: ["grep", "o", NULL]
+3. Link them together:
+   - echo node's next_cmd → grep node
+
+Result:
 ```
-[CMD_NODE_1] -> [CMD_NODE_2]
-├── cmd_name: "echo"     ├── cmd_name: "grep"
-└── cmd_args: ["echo",   └── cmd_args: ["grep", 
-              "hello"]              "o"]
+Command 1           Command 2
+[echo hello] -----> [grep o]
 ```
 
-### 3. Redirections
+### 3. Command with Redirections
 ```bash
 cat < input.txt > output.txt
 ```
-Token List:
+Parser steps:
+1. Create command node
+   - cmd_name: "cat"
+   - cmd_args: ["cat", NULL]
+2. Note input redirection from "input.txt"
+3. Note output redirection to "output.txt"
+
+Result:
 ```
-[WORD("cat")] -> [LESS("<")] -> [WORD("input.txt")] -> 
-[GREAT(">")] -> [WORD("output.txt")]
+Command Node
+├── cmd_name: "cat"
+├── cmd_args: ["cat", NULL]
+└── next_cmd: NULL
+(Redirections handled during execution)
 ```
 
-### 4. Heredoc
+## Error Checking
+
+The parser watches for these problems:
+
+### 1. Syntax Errors
+- Empty commands: `ls |`
+- Multiple pipes: `ls ||| cat`
+- Wrong redirection order: `> file cat`
+- Missing filenames: `cat >`
+
+### 2. Memory Problems
+- Can't allocate new nodes
+- Can't copy strings
+- Can't create argument arrays
+
+### 3. Command Problems
+- Invalid command names
+- Too many arguments
+- Bad redirection combinations
+
+## Memory Management
+
+The parser is careful with memory:
+
+### 1. Creating Things
+```c
+// Make a new command
+bool ft_create_cmd(t_minishell *minishell, char **cmd_args)
+{
+    // Allocates memory for command
+    // Copies all strings
+    // Links into command list
+    // Handles any errors
+}
+```
+
+### 2. Cleaning Up
+```c
+// Clean up commands
+void ft_free_cmd_list(t_cmd *cmd_list)
+{
+    // Frees all command nodes
+    // Frees all argument arrays
+    // Frees all strings
+    // Sets everything to NULL
+}
+```
+
+## What's Next?
+
+After parsing:
+1. The executor gets the command list
+2. It sets up any pipes needed
+3. It handles any redirections
+4. It runs each command in order
+
+## Common Questions
+
+### Q: What happens to quotes?
+A: Quotes are kept during parsing but removed before execution:
 ```bash
-cat << EOF
-```
-Token List:
-```
-[WORD("cat")] -> [LLESS("<<")] -> [WORD("EOF")]
+echo "hello world"  →  cmd_args: ["echo", "hello world", NULL]
 ```
 
-## Performance Considerations
+### Q: How are pipes handled?
+A: Each command in a pipe becomes its own node, linked together:
+```bash
+cmd1 | cmd2 | cmd3  →  [cmd1] -> [cmd2] -> [cmd3]
+```
 
-### 1. Memory Efficiency
-- Minimal copying
-- Efficient list traversal
-- Smart resource allocation
-- Prompt cleanup
-
-### 2. Processing Speed
-- Optimized list traversal
-- Efficient node linking
-- Smart validation checks
-- Quick error detection
-
-### 3. Resource Management
-- File descriptor tracking
-- Memory usage monitoring
-- Pipeline optimization
-- Error recovery 
+### Q: What about redirections?
+A: Redirections are noted during parsing and set up during execution:
+```bash
+cat < file  →  Command knows to read from "file" instead of keyboard
+``` 

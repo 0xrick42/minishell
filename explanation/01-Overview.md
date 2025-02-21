@@ -1,148 +1,160 @@
 # Minishell Project Overview
 
-## Introduction
-This document provides a comprehensive overview of the minishell project, a shell implementation that follows Unix shell behavior. The project emphasizes modularity, clean code organization, and robust error handling.
+## What is Minishell?
+Minishell is a simple shell implementation that works like bash. Think of it as a program that:
+1. Shows you a prompt
+2. Reads your command (like `ls -l` or `echo "hello"`)
+3. Understands what you want to do
+4. Executes the command
+5. Shows you the result
+6. Repeats!
 
-## Architecture
+## How Does It Work? (The Big Picture)
 
-### 1. Core Components
+### 1. Reading Your Command
+When you type a command, the shell:
+- Shows you the `minishell$` prompt
+- Uses `readline()` to get your input
+- Saves the command in history (so you can use up arrow later!)
 
-#### Input Processing (`srcs/main.c`)
-- REPL (Read-Eval-Print Loop) implementation
-- Command history management
-- Signal handling setup
-- Environment initialization
-
-#### Lexical Analysis (`srcs/token/`)
-- Character-by-character input processing
-- Token generation and classification
-- Quote handling
-- Operator recognition
-- Error detection
-
-#### Parsing (`srcs/parse/`)
-- AST (Abstract Syntax Tree) construction
-- Command structure generation
-- Syntax validation
-- Pipeline setup
-- Redirection analysis
-
-#### Execution (`srcs/exec/`)
-- Command execution management
-- Process creation and control
-- Pipeline implementation
-- Redirection handling
-- Heredoc processing
-- Exit status management
-
-#### Built-in Commands (`srcs/builtins/`)
-- Shell built-in implementation
-- Environment management
-- Directory navigation
-- Shell control
-
-#### Expansion (`srcs/expand/`)
-- Variable expansion
-- Quote processing
-- Word splitting
-- Special parameter handling
-
-### 2. Support Components
-
-#### Environment Management
-- Environment variable tracking
-- Variable modification
-- Path resolution
-- Shell variable handling
-
-#### Signal Handling
-- Interactive signal management
-- Child process signals
-- Terminal control
-
-#### Memory Management
-- Systematic resource tracking
-- Cleanup routines
-- Error recovery
-- Memory leak prevention
-
-## Implementation Details
-
-### 1. Data Flow
+### 2. Breaking Down the Command (Tokenization)
+The shell breaks your command into small pieces called tokens. For example:
+```bash
+echo "hello world" | grep "o" > output.txt
 ```
-Input → Tokenization → Parsing → Expansion → Execution
+Becomes tokens:
+1. `echo` (a WORD token)
+2. `"hello world"` (a WORD token)
+3. `|` (a PIPE token)
+4. `grep` (a WORD token)
+5. `"o"` (a WORD token)
+6. `>` (a GREAT token - for redirection)
+7. `output.txt` (a WORD token)
+
+### 3. Understanding the Command (Parsing)
+The shell then organizes these tokens into a list of commands. Each command knows:
+- What program to run (like `echo` or `grep`)
+- What arguments to pass (like `"hello world"`)
+- Where to send its output (to a pipe or a file)
+- Where to get its input from (from a pipe or a file)
+
+### 4. Setting Things Up (Preparation)
+Before running the command, the shell:
+- Creates pipes if needed (for commands like `cmd1 | cmd2`)
+- Opens files if needed (for `>` output.txt or `<` input.txt)
+- Sets up environment variables
+
+### 5. Running the Command (Execution)
+Finally, the shell:
+- Creates new processes for each command
+- Connects all the pipes and files
+- Runs the programs
+- Waits for them to finish
+- Collects the results
+
+## The Main Components
+
+### 1. Input Processing (`srcs/main.c`)
+- Gets your command using readline
+- Manages command history
+- Handles Ctrl+C and other signals
+
+### 2. Tokenizer (`srcs/token/`)
+Breaks your command into tokens:
+```c
+typedef struct s_token {
+    int             token_id;       // A number for each token
+    char            *token_name;    // The actual text
+    t_token_type    token_type;     // What kind of token (WORD, PIPE, etc.)
+    t_token_redir   token_redir;    // Is it a redirection?
+    struct s_token  *next_token;    // Points to next token
+} t_token;
 ```
 
-### 2. Key Features
-- Command execution
-- Pipeline support
-- Redirection handling
-- Environment management
-- Signal handling
-- History management
-- Error recovery
+### 3. Parser (`srcs/parse/`)
+Organizes tokens into commands:
+```c
+typedef struct s_cmd {
+    char            *cmd_name;      // Program to run
+    char            **cmd_args;     // Arguments for the program
+    struct s_cmd    *next_cmd;      // Next command (for pipes)
+} t_cmd;
+```
 
-### 3. Error Handling Strategy
-- Early error detection
-- Comprehensive validation
-- Proper cleanup on failures
-- Descriptive error messages
-- Recovery mechanisms
+### 4. Environment Manager
+Keeps track of environment variables:
+```c
+typedef struct s_envar {
+    char            *key;           // Variable name
+    char            *value;         // Variable value
+    struct s_envar  *next;         // Next variable
+} t_envar;
+```
 
-### 4. Memory Management
-- Systematic allocation tracking
-- Proper deallocation
-- Resource cleanup
-- Error recovery procedures
+### 5. Shell State
+Keeps track of everything:
+```c
+typedef struct s_minishell {
+    t_token         *token_list;    // List of tokens
+    t_envar         *env_list;      // List of environment variables
+    t_cmd           *cmd_list;      // List of commands
+    int             exit_status;    // Last command's result
+} t_minishell;
+```
 
-## Design Principles
+## How Commands Flow Through the Shell
 
-1. **Modularity**
-   - Clear component separation
-   - Well-defined interfaces
-   - Minimal coupling
-   - Maximum cohesion
+1. **You Type**: `echo "hello" | grep "o"`
 
-2. **Robustness**
-   - Comprehensive error handling
-   - Memory leak prevention
-   - Resource management
-   - Signal handling
+2. **Tokenizer Makes**:
+   ```
+   [WORD("echo")] -> [WORD("hello")] -> [PIPE("|")] -> 
+   [WORD("grep")] -> [WORD("o")]
+   ```
 
-3. **Maintainability**
-   - Clean code organization
-   - Clear documentation
-   - Consistent style
-   - Logical structure
+3. **Parser Creates**:
+   ```
+   Command 1         Command 2
+   [echo "hello"] -> [grep "o"]
+   ```
 
-4. **Efficiency**
-   - Optimized algorithms
-   - Minimal copying
-   - Resource reuse
-   - Smart memory management
+4. **Executor**:
+   - Creates a pipe
+   - Runs `echo "hello"`
+   - Connects its output to the pipe
+   - Runs `grep "o"`
+   - Connects its input to the pipe
+   - Shows you the result
 
-## Component Integration
+## Built-in Commands
+Some commands are built into the shell:
+- `cd`: Change directory
+- `echo`: Print text
+- `pwd`: Print current directory
+- `export`: Set environment variables
+- `unset`: Remove environment variables
+- `env`: Show environment variables
+- `exit`: Exit the shell
 
-Each component is designed to work independently while maintaining clear interfaces with other parts:
+## Error Handling
+The shell carefully checks for:
+- Syntax errors (`ls ||| ls`)
+- File errors (`cd nonexistent`)
+- Permission errors (`./not_executable`)
+- Memory errors (out of memory)
 
-1. **Tokenizer → Parser**
-   - Token stream generation
-   - Syntax validation
-   - Error reporting
+## Memory Management
+The shell is careful about memory:
+- Allocates memory when needed
+- Frees memory when done
+- Cleans up after errors
+- Prevents memory leaks
 
-2. **Parser → Executor**
-   - Command structure creation
-   - Pipeline setup
-   - Redirection configuration
-
-3. **Executor → Builtins**
-   - Command type detection
-   - Environment access
-   - Status management
-
-4. **Expansion → All Components**
-   - Variable resolution
-   - Quote processing
-   - Word splitting
-
-For detailed documentation on each component, see the respective documentation files in this directory. 
+## That's It!
+Now you know how the shell works:
+1. Read command
+2. Break into tokens
+3. Organize into commands
+4. Run commands
+5. Show results
+6. Repeat! 
