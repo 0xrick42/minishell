@@ -1,224 +1,278 @@
-# Breaking Down Commands (Tokenization)
+# Tokenization
 
 ## What is Tokenization?
-Tokenization is like breaking a sentence into words. For example, when you type:
-```bash
-echo "hello world" > output.txt
-```
-The shell needs to break this into pieces (tokens) to understand:
-1. The command (`echo`)
-2. The argument (`"hello world"`)
-3. The redirection (`>`)
-4. The file name (`output.txt`)
 
-## How Does It Work?
+Tokenization is the process of breaking the command input into individual "tokens" (words, operators, etc.) that can be processed by the shell. This is the first step in processing a command line.
 
-### Step 1: Reading Characters
-The shell reads your command character by character:
+For example, the command `echo "hello world" > output.txt` is broken into the following tokens:
+- `echo` (command)
+- `"hello world"` (quoted argument)
+- `>` (redirection operator)
+- `output.txt` (filename)
+
+## Token Types in Minishell
+
+The minishell recognizes these token types:
+
 ```c
-bool ft_tokenization(t_minishell *minishell, char *input, int i)
-```
-This function:
-1. Looks at each character
-2. Decides what kind of token it's part of
-3. Creates the right type of token
-4. Moves to the next character
-
-### Step 2: Identifying Token Types
-The shell recognizes these types of tokens:
-```c
-typedef enum e_token_type {
-    WORD,       // Commands, arguments, filenames (like "echo", "hello")
-    GREAT,      // > (output to file)
-    GGREAT,     // >> (append to file)
-    LESS,       // < (input from file)
-    LLESS,      // << (heredoc)
-    PIPE        // | (pipe between commands)
+typedef enum e_token_type
+{
+    WORD,   // Commands, arguments, filenames
+    GREAT,  // Output redirection (>)
+    GGREAT, // Append output redirection (>>)
+    LESS,   // Input redirection (<)
+    LLESS,  // Here document (<<)
+    PIPE,   // Command pipeline (|)
 } t_token_type;
 ```
 
-### Step 3: Creating Tokens
-Each token is stored in this structure:
+Additionally, tokens can be marked as redirection operators:
+
 ```c
-typedef struct s_token {
-    int             token_id;       // Number to identify the token
-    char            *token_name;    // The actual text ("echo", ">", etc.)
-    t_token_type    token_type;     // What kind of token it is (from enum above)
-    t_token_redir   token_redir;    // Is it a redirection? (NONE or REDIR)
-    struct s_token  *next_token;    // Points to the next token in the list
-} t_token;
+typedef enum e_token_redir
+{
+    NONE,   // Not a redirection
+    REDIR,  // Is a redirection operator
+} t_token_redir;
 ```
 
-### Step 4: Special Cases
+## Tokenization Process
 
-#### Handling Quotes
-When the shell sees quotes, it:
-1. Recognizes the quote type (`'` or `"`)
-2. Includes everything inside as one token
-3. Checks for matching end quote
-4. Removes the quotes when needed
+### Main Tokenization Function
 
-Example:
-```bash
-echo "hello world"
-```
-Becomes:
-- Token 1: `WORD("echo")`
-- Token 2: `WORD("hello world")` (quotes preserved for now)
+The main tokenizer function is `ft_tokenization()` in `srcs/token/token_ops2.c`:
 
-#### Handling Spaces
-- Spaces separate tokens (unless in quotes)
-- Multiple spaces are ignored
-- Tabs and newlines count as spaces
-
-#### Handling Operators
-When the shell sees `>`, `<`, `|`, it:
-1. Creates a special operator token
-2. Sets the right type (GREAT, LESS, PIPE)
-3. Marks redirections as REDIR
-
-## The Functions That Do The Work
-
-### 1. Creating Different Types of Tokens
 ```c
-// For words (commands, arguments, filenames)
-bool ft_create_word_token(t_minishell *minishell, char *input);
-
-// For operators
-bool ft_create_pipe_token(t_minishell *minishell);
-bool ft_create_output_token(t_minishell *minishell);
-bool ft_create_append_token(t_minishell *minishell);
-bool ft_create_input_token(t_minishell *minishell);
-bool ft_create_hdoc_token(t_minishell *minishell);
+bool ft_tokenization(t_minishell *minishell, char *input, int i)
+{
+    while (input[i])
+    {
+        if (ft_space(input[i]))
+            i++;
+        else if (input[i] == '|')
+        {
+            if (!ft_handle_pipe_token(minishell, input, &i))
+                return (false);
+        }
+        else if (input[i] == '>')
+        {
+            if (!ft_handle_great_token(minishell, input, &i))
+                return (false);
+        }
+        else if (input[i] == '<')
+        {
+            if (!ft_handle_less_token(minishell, input, &i))
+                return (false);
+        }
+        else if (!ft_word(minishell, input, &i))
+            return (false);
+    }
+    return (true);
+}
 ```
 
-### 2. Processing Different Parts
+This function:
+1. Iterates through each character of the input
+2. Skips spaces
+3. Identifies special characters (|, >, <) and handles them accordingly
+4. Creates WORD tokens for everything else
+
+### Handling Special Characters
+
+#### Pipe Token (|)
+
+When a pipe is encountered, `ft_handle_pipe_token()` creates a PIPE token:
+
 ```c
-// Handle pipe character
-bool ft_pipe(t_minishell *minishell, int *i);
+bool ft_create_pipe_token(t_minishell *minishell)
+{
+    t_token *new_token;
 
-// Handle > and >>
-bool ft_great(t_minishell *minishell, int *i);
-bool ft_ggreat(t_minishell *minishell, int *i);
-
-// Handle < and <<
-bool ft_less(t_minishell *minishell, int *i);
-bool ft_lless(t_minishell *minishell, int *i);
-
-// Handle words
-bool ft_word(t_minishell *minishell, char *input, int *i);
+    new_token = malloc(sizeof(t_token));
+    if (!new_token)
+        return (false);
+    new_token->token_name = ft_strdup("|");
+    if (!new_token->token_name)
+        return (free(new_token), false);
+    new_token->token_type = PIPE;
+    new_token->token_redir = NONE;
+    new_token->next_token = NULL;
+    ft_append_token(minishell, new_token);
+    return (true);
+}
 ```
 
-### 3. Checking Everything is Correct
+#### Redirection Tokens (>, >>, <, <<)
+
+For redirection operators, functions like `ft_create_output_token()` create the appropriate token:
+
 ```c
-// Make sure tokens are in the right order
-bool ft_token_order(t_minishell *minishell);
+bool ft_create_output_token(t_minishell *minishell)
+{
+    t_token *new_token;
 
-// Check pipe usage is correct
-bool ft_check_pipe(t_minishell *minishell);
-
-// Check redirections are correct
-bool ft_check_redir(t_minishell *minishell);
+    new_token = malloc(sizeof(t_token));
+    if (!new_token)
+        return (false);
+    new_token->token_name = ft_strdup(">");
+    if (!new_token->token_name)
+        return (free(new_token), false);
+    new_token->token_type = GREAT;
+    new_token->token_redir = REDIR;
+    new_token->next_token = NULL;
+    ft_append_token(minishell, new_token);
+    return (true);
+}
 ```
 
-## Examples with Step-by-Step Breakdown
+### Word Token Creation
 
-### 1. Simple Command
-```bash
-ls -l
-```
-Steps:
-1. Read 'l': Start WORD token → "ls"
-2. Read 's': Continue WORD token
-3. Read space: End "ls" token
-4. Read '-': Start WORD token → "-l"
-5. Read 'l': Continue WORD token
-6. End of input: End "-l" token
+For normal words (commands, arguments, filenames), `ft_create_word_token()` creates a WORD token:
 
-Result:
-```
-[WORD("ls")] -> [WORD("-l")]
-```
+```c
+bool ft_create_word_token(t_minishell *minishell, char *input)
+{
+    t_token *new_token;
+    int     len;
 
-### 2. Command with Redirection
-```bash
-echo hello > output.txt
-```
-Steps:
-1. Read 'e': Start WORD token → "echo"
-2. Read space: End "echo" token
-3. Read 'h': Start WORD token → "hello"
-4. Read space: End "hello" token
-5. Read '>': Create GREAT token
-6. Read space: End '>' token
-7. Read 'o': Start WORD token → "output.txt"
-8. End of input: End "output.txt" token
-
-Result:
-```
-[WORD("echo")] -> [WORD("hello")] -> [GREAT(">")] -> [WORD("output.txt")]
+    len = ft_wordlen(input);
+    new_token = malloc(sizeof(t_token));
+    if (!new_token)
+        return (false);
+    new_token->token_id = ft_last_token_id(minishell) + 1;
+    new_token->token_name = ft_substr(input, 0, len);
+    new_token->token_type = WORD;
+    new_token->token_redir = NONE;
+    new_token->next_token = NULL;
+    ft_append_token(minishell, new_token);
+    return (true);
+}
 ```
 
-### 3. Pipeline with Quotes
-```bash
-echo "hello world" | grep "o"
+### Handling Quotes
+
+The tokenizer preserves quotes during the tokenization stage:
+- Single quotes ('): Treat everything inside as literal text
+- Double quotes ("): Allow variable expansion inside, but treat as one token
+
+The `ft_wordlen()` function calculates the length of a word, respecting quotes:
+
+```c
+int ft_wordlen(char *input)
+{
+    int i;
+    int in_quote;
+    char quote_type;
+
+    i = 0;
+    in_quote = 0;
+    quote_type = 0;
+    while (input[i] && (!ft_notword(input[i]) || in_quote))
+    {
+        if ((input[i] == '\'' || input[i] == '\"') && !in_quote)
+        {
+            in_quote = 1;
+            quote_type = input[i];
+        }
+        else if (in_quote && input[i] == quote_type)
+        {
+            in_quote = 0;
+            quote_type = 0;
+        }
+        i++;
+    }
+    return (i);
+}
 ```
-Steps:
-1. Read 'e': Start WORD token → "echo"
-2. Read space: End "echo" token
-3. Read '"': Start quoted WORD token
-4. Read until matching '"': Create "hello world" token
-5. Read space: End quoted token
-6. Read '|': Create PIPE token
-7. Read space: End PIPE token
-8. Read 'g': Start WORD token → "grep"
-9. Read space: End "grep" token
-10. Read '"': Start quoted WORD token
-11. Read 'o': Continue quoted token
-12. Read '"': End "o" token
 
-Result:
-```
-[WORD("echo")] -> [WORD("hello world")] -> [PIPE("|")] -> 
-[WORD("grep")] -> [WORD("o")]
+## Syntax Validation
+
+After tokenization, syntax validation is performed:
+
+```c
+bool ft_token_order(t_minishell *minishell)
+{
+    if (!ft_check_pipe(minishell))
+        return (false);
+    if (!ft_check_redir(minishell))
+        return (false);
+    return (true);
+}
 ```
 
-## Error Checking
+This checks for common syntax errors like:
+- Pipe at the beginning/end of a command
+- Redirection without a filename
+- Multiple consecutive operators
 
-The shell checks for these errors:
-1. **Quote Errors**
-   - Unclosed quotes: `echo "hello`
-   - Mismatched quotes: `echo "hello'`
+Examples of validations:
 
-2. **Operator Errors**
-   - Multiple pipes: `ls |||| cat`
-   - Missing file names: `echo > `
-   - Wrong order: `> ls`
+```c
+bool ft_check_pipe(t_minishell *minishell)
+{
+    t_token *current;
 
-3. **Memory Errors**
-   - Out of memory
-   - Failed allocations
+    current = minishell->token_list;
+    while (current)
+    {
+        if (current->token_type == PIPE)
+        {
+            if (current->token_id == 0 && !current->next_token)
+                return (ft_token_error(current->token_name), false);
+            else if (current->token_id == 0 || !current->next_token)
+                return (ft_token_error(current->token_name), false);
+            else if (current->next_token->token_type == PIPE)
+                return (ft_token_error(current->token_name), false);
+            else if (current->next_token->token_redir == REDIR)
+                return (ft_token_error(current->token_name), false);
+        }
+        current = current->next_token;
+    }
+    return (true);
+}
+```
 
-## Memory Management
+## Examples
 
-The shell is careful with memory:
-1. **Creating Tokens**
-   - Allocates exact space needed
-   - Copies strings carefully
-   - Links tokens together
+### Simple Command
 
-2. **Cleaning Up**
-   ```c
-   void ft_free_token_list(t_minishell *minishell);
-   ```
-   - Frees each token
-   - Frees token contents
-   - Sets pointers to NULL
+Input: `ls -l`
 
-## What's Next?
+Tokens:
+1. WORD("ls")
+2. WORD("-l")
 
-After tokenization:
-1. The parser gets the token list
-2. It checks the syntax is correct
-3. It creates the command list
-4. The executor runs the commands 
+### Command with Redirection
+
+Input: `echo hello > output.txt`
+
+Tokens:
+1. WORD("echo")
+2. WORD("hello")
+3. GREAT(">") - marked as REDIR
+4. WORD("output.txt")
+
+### Complex Command
+
+Input: `cat file.txt | grep "error" > output.txt`
+
+Tokens:
+1. WORD("cat")
+2. WORD("file.txt")
+3. PIPE("|")
+4. WORD("grep")
+5. WORD("error") - quotes will be processed later
+6. GREAT(">") - marked as REDIR
+7. WORD("output.txt")
+
+## Current Status and Limitations
+
+The tokenization is fully implemented and handles:
+- Basic command syntax
+- Pipes and redirections
+- Quotes (single and double)
+- Basic syntax validation
+
+However, there are some limitations:
+- No handling of escape characters (\)
+- Limited error reporting for syntax errors 

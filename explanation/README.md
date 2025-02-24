@@ -1,178 +1,110 @@
-# Welcome to Our Shell!
+# Minishell Project Documentation
 
-## What is This?
-This is a simple shell program, like bash or zsh, but made from scratch! It can run commands, handle pipes, work with files, and manage environment variables.
+## Project Overview
 
-## How Does It Work?
+Minishell is a simplified shell implementation similar to bash. This project involves creating a command-line interpreter that can handle command execution, pipes, redirections, environment variables, and more.
 
-### The Big Picture
-When you type a command, our shell:
-1. Reads what you typed
-2. Figures out what you want
-3. Does it!
+## Current Implementation Status
 
-For example:
-```bash
-ls -l | grep .txt > output.txt
-```
-1. Reads: `ls -l | grep .txt > output.txt`
-2. Understands:
-   - Run `ls -l`
-   - Send its output to `grep .txt`
-   - Save grep's output to `output.txt`
-3. Does it all in order!
+### ✅ Implemented Features
 
-### Main Parts
+1. **Basic Shell Structure**
+   - Command prompt with readline integration
+   - Command history using add_history
+   - Main shell loop
 
-#### 1. Reading Commands (`main.c`)
-- Gets your input (using readline)
-- Remembers command history
-- Handles Ctrl+C, Ctrl+D
+2. **Tokenization**
+   - Lexical analysis for parsing input into tokens
+   - Support for different token types:
+     - WORD (commands, arguments, filenames)
+     - PIPE (|)
+     - GREAT (>)
+     - GGREAT (>>)
+     - LESS (<)
+     - LLESS (<<)
+   - Handling of quotes in tokens
+   - Syntax validation for proper token order
 
-#### 2. Understanding Words (`srcs/token/`)
-Breaks your command into pieces:
-```bash
-echo "hello world" > output.txt
-```
-Becomes:
-- Word: echo
-- Word: "hello world"
-- Redirect: >
-- Word: output.txt
+3. **Parsing**
+   - Parsing tokens into command structures
+   - Command list creation
+   - Handling special characters and quotes
 
-#### 3. Understanding Commands (`srcs/parse/`)
-Takes the pieces and figures out:
-- What command to run
-- What arguments it needs
-- Where to send output
-- What files to use
+4. **Environment Variables**
+   - Storage and management of environment variables
+   - Environment variable list creation from envp
 
-#### 4. Making Commands Powerful (`srcs/expand/`)
-Handles special features:
-```bash
-echo "Hello $USER"     # Uses your username
-cd ~                  # Goes to your home
-echo $PATH            # Shows program locations
-```
+5. **Builtins**
+   - `echo` - Echo arguments to standard output with -n option support
+   - `cd` - Change directory with support for relative and absolute paths
+   - `pwd` - Print working directory
+   - `export` - Set environment variables
+   - `unset` - Unset environment variables
+   - `env` - Display environment variables
+   - `exit` - Exit the shell with optional status code
 
-#### 5. Running Commands (`srcs/exec/`)
-- Runs the programs you ask for
-- Connects pipes
-- Handles files
-- Creates new processes
+6. **Variable Expansion**
+   - Basic expansion of environment variables
+   - Handling of $ syntax
 
-#### 6. Built-in Commands (`srcs/builtins/`)
-Special commands that are part of the shell:
-- `cd`: Change directory
-- `echo`: Print text
-- `pwd`: Show current directory
-- `export`: Set variables
-- `unset`: Remove variables
-- `env`: Show variables
-- `exit`: Quit the shell
+### ❌ Missing Features
 
-## How Commands Are Stored
+1. **Command Execution**
+   - No implementation of execve for running external commands
+   - No PATH variable resolution for finding executables
+   - No fork() implementation for creating child processes
 
-### Command Structure
-```c
-struct s_cmd {
-    char *cmd_name;         // Program to run
-    char **cmd_args;        // Arguments for program
-    struct s_cmd *next_cmd; // Next command (for pipes)
-};
-```
+2. **Redirection Handling**
+   - While tokens for redirections are recognized, there's no implementation of:
+     - File descriptor manipulation (dup2)
+     - File opening/closing for redirections
+     - Actual I/O redirection logic
 
-Example:
-```bash
-ls -l | grep .txt
-```
-Becomes:
-```
-Command 1:           Command 2:
-cmd_name: "ls"       cmd_name: "grep"
-cmd_args:            cmd_args:
-  [0]: "ls"           [0]: ".txt"
-  [1]: "-l"           [1]: NULL
-  [2]: NULL           [2]: NULL
-next_cmd: ------>    next_cmd: NULL
-```
+3. **Pipe Implementation**
+   - While pipe tokens are recognized, there's no implementation of:
+     - Pipe creation (pipe())
+     - Process creation for piped commands
+     - Connecting commands with pipes
 
-### Environment Variables
-```c
-struct s_envar {
-    char *key;             // Variable name
-    char *value;           // Variable value
-    struct s_envar *next;  // Next variable
-};
-```
+4. **Signal Handling**
+   - No implementation for:
+     - Ctrl+C (SIGINT)
+     - Ctrl+D (EOF)
+     - Ctrl+\ (SIGQUIT)
 
-Example:
-```
-HOME=/home/user
-↓
-PATH=/usr/bin
-↓
-USER=rick
-↓
-NULL
-```
+5. **Heredoc Implementation**
+   - While heredoc tokens (<<) are recognized, there's no implementation of:
+     - Reading heredoc content
+     - Setting up heredoc as input
 
-## How It All Works Together
+## Documentation Structure
 
-1. **Getting Input**
-   ```bash
-   $ ls -l | grep .txt > output.txt
-   ```
+This documentation is organized into the following sections:
 
-2. **Breaking into Words**
-   ```
-   [ls] [-l] [|] [grep] [.txt] [>] [output.txt]
-   ```
+1. [**Shell Overview**](01-Shell-Overview.md) - General structure and workflow
+2. [**Tokenization**](02-Tokenization.md) - Breaking input into tokens
+3. [**Parsing**](03-Parsing.md) - Creating command structures
+4. [**Builtins**](04-Builtins.md) - Built-in command implementation
+5. [**Environment**](05-Environment.md) - Environment variable handling
+6. [**To Be Implemented**](06-To-Be-Implemented.md) - Detailed guide for remaining features
 
-3. **Understanding Structure**
-   ```
-   Command: ls -l
-   | (pipe to)
-   Command: grep .txt
-   > (output to file)
-   File: output.txt
-   ```
+## Project Structure
 
-4. **Running Everything**
-   - Start ls -l
-   - Connect its output to grep
-   - Start grep .txt
-   - Send grep's output to output.txt
-   - Wait for both to finish
+- `srcs/` - Source code directory
+  - `main.c` - Main shell loop
+  - `builtins/` - Built-in command implementations
+  - `token/` - Tokenization logic
+  - `parse/` - Command parsing
+  - `expand/` - Variable expansion
+  - `exec/` - Command execution (partially implemented)
+  - `signal/` - Signal handling (not implemented)
+  - `clean/` - Memory cleanup functions
+  - `utils/` - Utility functions
 
-## Want to Learn More?
+- `includes/` - Header files
+  - `minishell.h` - Main header with structures and prototypes
+  - `define.h` - Constants and enumerations
+  - `builtins.h` - Built-in command prototypes
+  - `expand.h` - Expansion related prototypes
 
-Check out these detailed guides:
-- [01-Overview.md](01-Overview.md): The big picture
-- [02-Tokenization.md](02-Tokenization.md): Breaking commands into pieces
-- [03-Parsing.md](03-Parsing.md): Understanding command structure
-- [04-Execution.md](04-Execution.md): Running commands
-- [05-Builtins.md](05-Builtins.md): Special shell commands
-- [06-Expansion.md](06-Expansion.md): Making commands powerful
-
-## Common Problems and Solutions
-
-### 1. Command Not Found
-- Check if command exists
-- Check if it's in PATH
-- Try using full path
-
-### 2. Permission Denied
-- Check file permissions
-- Try with sudo (if you have it)
-- Check directory permissions
-
-### 3. Pipe/Redirection Problems
-- Check file permissions
-- Make sure directories exist
-- Check disk space
-
-### 4. Variable Problems
-- Check variable exists: `env`
-- Check spelling (case sensitive)
-- Use quotes if spaces: "$VAR" 
+- `libft/` - Custom library with utility functions 
