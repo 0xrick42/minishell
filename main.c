@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 19:09:26 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/13 16:49:05 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/25 19:12:58 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -53,9 +53,9 @@ void	ft_test_cmd(t_minishell *minishell)
 	int				i;
 	
 	current_cmd = minishell->cmd_list;
-	i = 0;
 	while (current_cmd)
 	{
+		i = 0;
 		printf("cmd_name: %s\n", current_cmd->cmd_name);
 		printf("cmd_args: ");
 		while (current_cmd->cmd_args[i])
@@ -105,12 +105,14 @@ int	main(int ac, char **av, char **envp)
 		// ft_test_token(minishell, input);	
 		// ft_test_env(minishell, envp);
 		// end of testing part
-		ft_free_token_list(minishell);
 		if (!ft_cmd_struct(input, minishell))
 			return (1);
 		// following part is for testing purposes
-		// ft_test_cmd(minishell);
-		// end of testing part		
+		ft_test_cmd(minishell);
+		// end of testing part
+		// ft_free_cmd_list(minishell->cmd_list);		
+		ft_free_token_list(minishell);
+		ft_free_cmd_list(minishell->cmd_list);
 		free(input);
 		input = NULL;
 	}

@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 17:48:20 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/14 15:06:17 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/25 19:20:18 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -17,7 +17,7 @@ void	ft_free_table(char **table)
 	int		i;
 
 	i = 0;
-	while (table[i])
+	while (table && table[i])
 	{
 		free(table[i]);
 		table[i] = NULL;
@@ -65,7 +65,7 @@ char	**ft_split_cmd_args(char *cmd_cell)
 	if (quote_flag == false)
 		cmd_args = ft_split(cmd_cell, ' ');
 	else
-		cmd_args = ft_split_quotes(cmd_cell, ' ');
+		cmd_args = ft_split_quotes(cmd_cell);
 	return (cmd_args);
 }
 
@@ -74,6 +74,7 @@ bool	ft_cmd_list(char *cmd_cell, t_minishell *minishell)
 	t_cmd	*new_cmd;
 	t_cmd	*current_cmd;
 
+	current_cmd = NULL;
 	new_cmd = malloc(sizeof(t_cmd));
 	if (!new_cmd)
 		return (ft_free_cmd_list(minishell->cmd_list), false);
@@ -100,17 +101,16 @@ bool	ft_cmd_struct(char *input, t_minishell *minishell)
 {
 	char	**cmd_table;
 	int		i;
-
-	cmd_table = ft_split_quotes(input, '|');
+	
+	cmd_table = ft_split_pipes(input);
 	if (!cmd_table)
 		return (false);
 	i = 0;
-	while (cmd_table[i])
+	while (cmd_table && cmd_table[i])
 	{
 		if (!ft_cmd_list(cmd_table[i], minishell))
-			return (ft_free_table(cmd_table), false);
+			return (false);
 		i++;
 	}
-	ft_free_table(cmd_table);
 	return (true);
 }

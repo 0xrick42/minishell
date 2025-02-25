@@ -11,7 +11,8 @@ char_utils.c \
 parse_char.c \
 envar.c \
 cmd_list.c \
-ft_split_quotes.c 
+ft_split_pipes.c  \
+ft_split_quotes.c \
 
 NAME = minishell
 OBJS = $(SRCS:.c=.o)
