@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/26 13:28:24 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/26 17:23:45 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -39,12 +39,21 @@ typedef enum e_token_type
 	PIPE,
 }					t_token_type;
 
+typedef struct s_redir
+{
+	char			*redir_type;
+	char			*redir_file;
+	struct s_redir	*next_redir;
+}					t_redir;
+
 typedef struct s_cmd
 {
 	char			*whole_cmd;
 	char			*cmd_name;
 	char			**cmd_args;
+	t_redir			*redir_list;
 	struct s_cmd	*next_cmd;
+	struct s_cmd 	*prev_cmd;
 }					t_cmd;
 
 typedef struct s_token
