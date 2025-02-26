@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 19:09:26 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/25 19:12:58 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/26 13:34:46 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -55,7 +55,8 @@ void	ft_test_cmd(t_minishell *minishell)
 	current_cmd = minishell->cmd_list;
 	while (current_cmd)
 	{
-		i = 0;
+		i = 0;		
+		printf("whole_cmd: %s\n", current_cmd->whole_cmd);
 		printf("cmd_name: %s\n", current_cmd->cmd_name);
 		printf("cmd_args: ");
 		while (current_cmd->cmd_args[i])
@@ -112,7 +113,7 @@ int	main(int ac, char **av, char **envp)
 		// end of testing part
 		// ft_free_cmd_list(minishell->cmd_list);		
 		ft_free_token_list(minishell);
-		ft_free_cmd_list(minishell->cmd_list);
+		ft_free_cmd_list(minishell);
 		free(input);
 		input = NULL;
 	}
