@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/14 19:09:26 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/26 13:34:46 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/27 19:09:55 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -50,12 +50,15 @@ void	ft_test_env(t_minishell *minishell, char **envp)
 void	ft_test_cmd(t_minishell *minishell)
 {
 	t_cmd			*current_cmd;
+	t_redir			*current_redir;
 	int				i;
 	
 	current_cmd = minishell->cmd_list;
+	current_redir = minishell->cmd_list->redir_list;
 	while (current_cmd)
 	{
-		i = 0;		
+		i = 0;
+		printf("cmd_pos: %d\n", current_cmd->cmd_pos);
 		printf("whole_cmd: %s\n", current_cmd->whole_cmd);
 		printf("cmd_name: %s\n", current_cmd->cmd_name);
 		printf("cmd_args: ");
@@ -64,6 +67,15 @@ void	ft_test_cmd(t_minishell *minishell)
 			printf("[%s] ", current_cmd->cmd_args[i]);
 			i++;
 		}
+		printf("\n");			
+		current_redir = current_cmd->redir_list;
+		while (current_redir)
+		{
+			printf("redir_type: %s ", current_redir->redir_type);
+			printf("redir_file: %s\n", current_redir->redir_file);
+			current_redir = current_redir->next_redir;
+		}
+		printf("previous cmd: %p\n", current_cmd->prev_cmd);
 		printf("\n");
 		current_cmd = current_cmd->next_cmd;
 	}
@@ -110,8 +122,7 @@ int	main(int ac, char **av, char **envp)
 			return (1);
 		// following part is for testing purposes
 		ft_test_cmd(minishell);
-		// end of testing part
-		// ft_free_cmd_list(minishell->cmd_list);		
+		// end of testing part	
 		ft_free_token_list(minishell);
 		ft_free_cmd_list(minishell);
 		free(input);
@@ -120,3 +131,9 @@ int	main(int ac, char **av, char **envp)
 	rl_clear_history();
 	return (0);
 }
+
+
+
+// pbm pour liste de redir quand plusieurs redir dans une cmd a corriger
+// pbm free liste de redir
+// verifier si liste chainee envar bien convertie en tableau (while + printf envar[i])

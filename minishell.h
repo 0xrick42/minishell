@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2024/12/27 17:03:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/26 17:23:45 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/27 18:54:59 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -48,6 +48,7 @@ typedef struct s_redir
 
 typedef struct s_cmd
 {
+	int				cmd_pos;
 	char			*whole_cmd;
 	char			*cmd_name;
 	char			**cmd_args;
@@ -123,16 +124,25 @@ char				*ft_get_value(char *envar, int start);
 
 bool				ft_cmd_struct(char *input, t_minishell *minishell);
 bool				ft_cmd_list(char *cmd_cell, t_minishell *minishell);
+bool				ft_cmd_init(t_cmd *new_cmd, t_minishell *minishell,
+						char *cmd_cell);
 char				**ft_split_cmd_args(char *cmd_cell);
 void				ft_free_cmd_list(t_minishell *minishell);
 void				ft_free_table(char **table);
 
 char				**ft_split_pipes(char *s);
 char				**ft_fill_tab_pipes(char *s, char **tab);
-
 void				ft_skip_quotes(char *s, int *i);
-
 char				**ft_split_quotes(char *s);
+
+bool				ft_redir_list(t_cmd *cmd);
+bool				ft_strstr(char *s1, char *s2);
+
+int					ft_lst_size(t_envar *env_list);
+
+void				ft_free_redir_list(t_redir *redir_list);
+bool				ft_add_redir(t_redir *new_redir, t_cmd *cmd);
+
 char				**ft_get_free(char **tab, int index);
 
 #endif

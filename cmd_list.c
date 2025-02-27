@@ -6,7 +6,7 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 17:48:20 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/26 19:03:16 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/27 19:05:20 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -27,6 +27,28 @@ void	ft_free_table(char **table)
 	table = NULL;
 }
 
+void	ft_free_redir_list(t_redir *redir_list)
+{
+	t_redir	*current_redir;
+	t_redir	*tmp;
+
+	current_redir = redir_list;
+	while (current_redir)
+	{
+		tmp = current_redir->next_redir;
+		free(current_redir->redir_type);
+		current_redir->redir_type = NULL;
+		if (current_redir->redir_file)
+		{
+			free(current_redir->redir_file);
+			current_redir->redir_file = NULL;
+		}	
+		current_redir = tmp;
+	}
+	redir_list = NULL;
+	return ;
+}
+
 void	ft_free_cmd_list(t_minishell *minishell)
 {
 	t_cmd	*current_cmd;
@@ -41,6 +63,9 @@ void	ft_free_cmd_list(t_minishell *minishell)
 		free(current_cmd->whole_cmd);
 		current_cmd->whole_cmd = NULL;
 		ft_free_table(current_cmd->cmd_args);
+		if (current_cmd->redir_list)
+			ft_free_redir_list(current_cmd->redir_list);
+		current_cmd->redir_list = NULL;
 		free(current_cmd);
 		current_cmd = tmp;
 	}
@@ -72,61 +97,91 @@ char	**ft_split_cmd_args(char *cmd_cell)
 	return (cmd_args);
 }
 
-bool	ft_redir_list_init(t_cmd *cmd)
+bool	ft_strstr(char *s1, char *s2)
+{
+	int	i;
+	int	j;
+
+	i = 0;
+	j = 0;
+	if (!s1 && !s1[i])
+		return (false);
+	while (s1[i + j] == s2[j] && s2[j] != '\0')
+		j++;
+	if (s2[j] == '\0')
+		return (true);
+	else
+		return (false);
+}
+
+bool	ft_add_redir(t_redir *new_redir, t_cmd *cmd)
+{
+	t_redir	*current_redir;
+	
+	if (!cmd->redir_list)
+		cmd->redir_list = new_redir;
+	else
+	{
+		current_redir = cmd->redir_list;
+		while (current_redir->next_redir)
+			current_redir = current_redir->next_redir;
+		current_redir->next_redir = new_redir;
+	}
+	return (true);
+}
+
+bool	ft_redir_list(t_cmd *cmd)
 {
 	t_redir	*new_redir;
-	t_redir	*current_redir;
 	int		i;
 
 	new_redir = malloc(sizeof(t_redir));
 	if (!new_redir)
 		return (false);
 	i = 0;
-	while (cmd->cmd_args)
-	{
-		if (ft_strcmp(cmd->cmd_args[i], ">") == 0)
-		{
-			new_redir->redir_type = ">";
-			new_redir->redir_file = ft_strdup(cmd->cmd_args[i + 1]);
-			if (!new_redir->redir_file)
-				return (false);
-		}
-		else if (ft_strcmp(cmd->cmd_args[i], ">>") == 0)
-		{
-			new_redir->redir_type = ">>";
-			new_redir->redir_file = ft_strdup(cmd->cmd_args[i + 1]);
-			if (!new_redir->redir_file)
-				return (false);
-		}
-		else if (ft_strcmp(cmd->cmd_args[i], "<") == 0)
-		{
-			new_redir->redir_type = "<";
-			new_redir->redir_file = ft_strdup(cmd->cmd_args[i + 1]);
-			if (!new_redir->redir_file)
-				return (false);
-		}
-		else if (ft_strcmp(cmd->cmd_args[i], "<<") == 0)
-		{
-			new_redir->redir_type = "<<";
-			new_redir->redir_file = NULL;
-		}
-		else
-			break ;
-	}
-	while (cmd->redir_list)
-		cmd->redir_list = new_redir;
-	current_redir = new_redir;
-	
-	
 	new_redir->redir_type = NULL;
-	
 	new_redir->redir_file = NULL;
 	new_redir->next_redir = NULL;
-
+	while (cmd->cmd_args && cmd->cmd_args[i])
+	{
+		if (ft_strstr(cmd->cmd_args[i], ">") == true)
+		{
+			new_redir->redir_type = ft_strdup(">");
+			new_redir->redir_file = ft_strdup(cmd->cmd_args[i + 1]);
+			if (!new_redir->redir_file)
+				return (false);
+			ft_add_redir(new_redir, cmd);
+		}
+		else if (ft_strstr(cmd->cmd_args[i], ">>") == true)
+		{
+			new_redir->redir_type = ft_strdup(">>");
+			new_redir->redir_file = ft_strdup(cmd->cmd_args[i + 1]);
+			if (!new_redir->redir_file)
+				return (false);
+			ft_add_redir(new_redir, cmd);
+		}
+		else if (ft_strstr(cmd->cmd_args[i], "<") == true)
+		{
+			new_redir->redir_type = ft_strdup("<");
+			new_redir->redir_file = ft_strdup(cmd->cmd_args[i + 1]);
+			if (!new_redir->redir_file)
+				return (false);
+			ft_add_redir(new_redir, cmd);
+		}
+		else if (ft_strstr(cmd->cmd_args[i], "<<") == true)
+		{
+			new_redir->redir_type = ft_strdup("<<");
+			ft_add_redir(new_redir, cmd);
+		}
+		i++;
+	}
+	return (true);
 }
 
 bool	ft_cmd_init(t_cmd *new_cmd, t_minishell *minishell, char *cmd_cell)
 {
+	new_cmd->cmd_pos = 0;
+	new_cmd->prev_cmd = NULL;
 	new_cmd->whole_cmd = ft_strdup(cmd_cell);
 	if (!new_cmd->whole_cmd)
 		return (ft_free_cmd_list(minishell), false);
@@ -136,7 +191,8 @@ bool	ft_cmd_init(t_cmd *new_cmd, t_minishell *minishell, char *cmd_cell)
 	new_cmd->cmd_name = ft_strdup(new_cmd->cmd_args[0]);
 	if (!new_cmd->cmd_name)
 		return (ft_free_cmd_list(minishell), false);
-	if (!ft_redir_list_init(new_cmd))
+	new_cmd->redir_list = NULL;
+	if (!ft_redir_list(new_cmd))
 		return (ft_free_cmd_list(minishell), false);
 	new_cmd->next_cmd = NULL;
 	return (true);
@@ -160,6 +216,8 @@ bool	ft_cmd_list(char *cmd_cell, t_minishell *minishell)
 		current_cmd = minishell->cmd_list;
 		while (current_cmd->next_cmd)
 			current_cmd = current_cmd->next_cmd;
+		new_cmd->prev_cmd = current_cmd;
+		new_cmd->cmd_pos = current_cmd->cmd_pos + 1;
 		current_cmd->next_cmd = new_cmd;
 	}
 	return (true);

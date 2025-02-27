@@ -6,11 +6,55 @@
 /*   By: aistierl <aistierl@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2025/01/23 16:33:48 by aistierl          #+#    #+#             */
-/*   Updated: 2025/02/14 15:03:15 by aistierl         ###   ########.fr       */
+/*   Updated: 2025/02/27 17:37:16 by aistierl         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "minishell.h"
+
+int		ft_lst_size(t_envar *env_list)
+{
+	t_envar		*current;
+	int			i;
+
+	i = 0;
+	current = env_list;
+	while (current)
+	{
+		current = current->next;
+		i++;
+	}
+	return (i);
+}
+
+char	**ft_envar_tab(t_minishell *minishell)
+{
+	t_envar		*current;
+	char		**envar_tab;
+	char		*temp;
+	int			i;
+	
+	envar_tab = malloc(sizeof(char *) * (ft_lst_size(minishell->env_list) + 1));
+	if (!envar_tab)
+		return (NULL);
+	i = 0;
+	current = minishell->env_list;
+	while (current)
+	{
+		temp = ft_strjoin(current->key, "=");
+		if (!temp)
+			return (NULL);
+		envar_tab[i] = ft_strjoin(temp, current->value);
+		if (!envar_tab[i])
+			return (NULL);
+		free(temp);
+		current = current->next;
+		i++;
+	}
+	envar_tab[i] = NULL;
+	return (envar_tab);
+}
+
 
 char	*ft_get_key(char *envp, char c)
 {
